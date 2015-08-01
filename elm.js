@@ -4166,6 +4166,7 @@ Elm.Main.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "Main",
    $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
@@ -4189,8 +4190,21 @@ Elm.Main.make = function (_elm) {
                                                     ,{ctor: "_Tuple2"
                                                      ,_0: "text-align"
                                                      ,_1: "center"}]));
+   var tiedGame = function (n) {
+      return _U.eq(n,7 * 6);
+   };
    var Replay = {ctor: "Replay"};
    var Start = {ctor: "Start"};
+   var getViewStart = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.button,
+      _L.fromArray([A2($Html$Events.onClick,
+      address,
+      Start)]),
+      _L.fromArray([$Html.text("Play!")]))]));
+   });
    var Move = function (a) {
       return {ctor: "Move",_0: a};
    };
@@ -4202,7 +4216,7 @@ Elm.Main.make = function (_elm) {
             case "White":
             return "Turn: White";}
          _U.badCase($moduleName,
-         "between lines 115 and 117");
+         "between lines 237 and 239");
       }();
    };
    var formString = function (c) {
@@ -4214,19 +4228,23 @@ Elm.Main.make = function (_elm) {
                  {case "Black": return "  B  ";
                     case "White": return "  W  ";}
                  _U.badCase($moduleName,
-                 "between lines 109 and 111");
+                 "between lines 231 and 233");
               }();
             case "Nothing": return "  -  ";}
          _U.badCase($moduleName,
-         "between lines 107 and 111");
+         "between lines 229 and 233");
       }();
    };
-   var Model = F3(function (a,
+   var Model = F5(function (a,
    b,
-   c) {
+   c,
+   d,
+   e) {
       return {_: {}
+             ,ai: e
              ,board: a
-             ,state: c
+             ,coins: d
+             ,status: c
              ,turn: b};
    });
    var Tied = {ctor: "Tied"};
@@ -4239,6 +4257,72 @@ Elm.Main.make = function (_elm) {
       return _U.eq(t,
       Black) ? White : Black;
    };
+   var getHead = function (_v4) {
+      return function () {
+         switch (_v4.ctor)
+         {case "Node": return _v4._0;}
+         _U.badCase($moduleName,
+         "on line 164, column 22 to 23");
+      }();
+   };
+   var State = F2(function (a,b) {
+      return {_: {}
+             ,info: b
+             ,model: a};
+   });
+   var initInfo = F2(function (heuristicParam,
+   moveParam) {
+      return {_: {}
+             ,heuristic: heuristicParam
+             ,move: moveParam};
+   });
+   var generateState = F2(function (moveParam,
+   modelParam) {
+      return {_: {}
+             ,info: A2(initInfo,0,moveParam)
+             ,model: modelParam};
+   });
+   var Info = F2(function (a,b) {
+      return {_: {}
+             ,heuristic: b
+             ,move: a};
+   });
+   var inf = 1000;
+   var getMax = function (l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return function () {
+                 var max = getMax(l._1);
+                 return _U.cmp(getHead(l._0).info.heuristic,
+                 max.heuristic) > -1 ? A2(initInfo,
+                 getHead(l._0).info.heuristic,
+                 getHead(l._0).info.move) : max;
+              }();
+            case "[]": return A2(initInfo,
+              -1 * (inf + 1),
+              0);}
+         _U.badCase($moduleName,
+         "between lines 152 and 154");
+      }();
+   };
+   var getMin = function (l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return function () {
+                 var min = getMin(l._1);
+                 return _U.cmp(getHead(l._0).info.heuristic,
+                 min.heuristic) < 1 ? A2(initInfo,
+                 getHead(l._0).info.heuristic,
+                 getHead(l._0).info.move) : min;
+              }();
+            case "[]": return A2(initInfo,
+              inf + 1,
+              0);}
+         _U.badCase($moduleName,
+         "between lines 158 and 160");
+      }();
+   };
+   var prof = 2;
    var emptyMatrix = F3(function (row,
    col,
    elem) {
@@ -4251,8 +4335,10 @@ Elm.Main.make = function (_elm) {
    6,
    $Maybe.Nothing);
    var init = {_: {}
+              ,ai: $Maybe.Just(White)
               ,board: getEmptyBoard
-              ,state: Starting
+              ,coins: 0
+              ,status: Starting
               ,turn: Black};
    var putL = F3(function (l,a,n) {
       return function () {
@@ -4266,7 +4352,7 @@ Elm.Main.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _U.badCase($moduleName,
-         "between lines 47 and 49");
+         "between lines 55 and 57");
       }();
    });
    var putLFirst = F3(function (l,
@@ -4283,7 +4369,7 @@ Elm.Main.make = function (_elm) {
             case "[]":
             return _L.fromArray([]);}
          _U.badCase($moduleName,
-         "between lines 41 and 43");
+         "between lines 49 and 51");
       }();
    });
    var containsL = F2(function (l,
@@ -4296,7 +4382,7 @@ Elm.Main.make = function (_elm) {
               elem);
             case "[]": return false;}
          _U.badCase($moduleName,
-         "between lines 35 and 37");
+         "between lines 43 and 45");
       }();
    });
    var isFull = function (l) {
@@ -4312,7 +4398,7 @@ Elm.Main.make = function (_elm) {
               1) ? l._0 : A2(getL,l._1,n - 1);
             case "[]": return bottom;}
          _U.badCase($moduleName,
-         "between lines 19 and 21");
+         "between lines 27 and 29");
       }();
    });
    var getM = F3(function (m,r,c) {
@@ -4328,885 +4414,915 @@ Elm.Main.make = function (_elm) {
       row,
       col));
    });
-   var view = F2(function (adress,
+   var getViewInGameHuman = F2(function (address,
    model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.h1,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text(getStringTurn(model.turn))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(1))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(2))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(3))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(4))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(5))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(6))]),
+                                _L.fromArray([$Html.text("-")]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                1))]))
+                                ,A2($Html.button,
+                                _L.fromArray([A2($Html$Events.onClick,
+                                address,
+                                Move(7))]),
+                                _L.fromArray([$Html.text("-")]))]))]));
+   });
+   var getViewWon = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.div,
+                   _L.fromArray([]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("Won")]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(getStringTurn(model.turn))]))]))
+                   ,A2($Html.button,
+                   _L.fromArray([A2($Html$Events.onClick,
+                   address,
+                   Replay)]),
+                   _L.fromArray([$Html.text("Replay")]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                1))]))]))]));
+   });
+   var getViewTied = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.div,
+                   _L.fromArray([]),
+                   _L.fromArray([A2($Html.h2,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text("Tied")]))]))
+                   ,A2($Html.button,
+                   _L.fromArray([A2($Html$Events.onClick,
+                   address,
+                   Replay)]),
+                   _L.fromArray([$Html.text("Replay")]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                1,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                2,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                3,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                4,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                5,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                6,
+                                1))]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([inline]),
+                   _L.fromArray([A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                6))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                5))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                4))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                3))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                2))]))
+                                ,A2($Html.h2,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text(A3(getStringBoard,
+                                model.board,
+                                7,
+                                1))]))]))]));
+   });
+   var opposite = F5(function (b,
+   t,
+   pilar,
+   index,
+   path) {
       return function () {
-         var _v16 = model.state;
-         switch (_v16.ctor)
-         {case "InGame":
-            return A2($Html.div,
-              _L.fromArray([]),
-              _L.fromArray([A2($Html.h1,
-                           _L.fromArray([]),
-                           _L.fromArray([$Html.text(getStringTurn(model.turn))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(1))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(2))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(3))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(4))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(5))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(6))]),
-                                        _L.fromArray([$Html.text("-")]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        1))]))
-                                        ,A2($Html.button,
-                                        _L.fromArray([A2($Html$Events.onClick,
-                                        adress,
-                                        Move(7))]),
-                                        _L.fromArray([$Html.text("-")]))]))]));
-            case "Starting":
-            return A2($Html.div,
-              _L.fromArray([]),
-              _L.fromArray([A2($Html.button,
-              _L.fromArray([A2($Html$Events.onClick,
-              adress,
-              Start)]),
-              _L.fromArray([$Html.text("Play!")]))]));
-            case "Tied":
-            return A2($Html.div,
-              _L.fromArray([]),
-              _L.fromArray([A2($Html.div,
-                           _L.fromArray([]),
-                           _L.fromArray([A2($Html.h2,
-                           _L.fromArray([]),
-                           _L.fromArray([$Html.text("Tied")]))]))
-                           ,A2($Html.button,
-                           _L.fromArray([A2($Html$Events.onClick,
-                           adress,
-                           Replay)]),
-                           _L.fromArray([$Html.text("Replay")]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        1))]))]))]));
-            case "Won": return A2($Html.div,
-              _L.fromArray([]),
-              _L.fromArray([A2($Html.div,
-                           _L.fromArray([]),
-                           _L.fromArray([A2($Html.h2,
-                           _L.fromArray([]),
-                           _L.fromArray([$Html.text("Won")]))]))
-                           ,A2($Html.button,
-                           _L.fromArray([A2($Html$Events.onClick,
-                           adress,
-                           Replay)]),
-                           _L.fromArray([$Html.text("Replay")]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        1,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        2,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        3,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        4,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        5,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        6,
-                                        1))]))]))
-                           ,A2($Html.div,
-                           _L.fromArray([inline]),
-                           _L.fromArray([A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        6))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        5))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        4))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        3))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        2))]))
-                                        ,A2($Html.h2,
-                                        _L.fromArray([]),
-                                        _L.fromArray([$Html.text(A3(getStringBoard,
-                                        model.board,
-                                        7,
-                                        1))]))]))]));}
-         _U.badCase($moduleName,
-         "between lines 223 and 424");
+         var pilar2 = function () {
+            switch (path)
+            {case 2: return pilar - 3;
+               case 3: return pilar - 3;
+               case 4: return pilar - 3;
+               case 6: return pilar + 3;
+               case 7: return pilar + 3;
+               case 8: return pilar + 3;}
+            return pilar;
+         }();
+         var index2 = function () {
+            switch (path)
+            {case 1: return index - 3;
+               case 2: return index - 3;
+               case 4: return index + 3;
+               case 5: return index + 3;
+               case 6: return index + 3;
+               case 8: return index - 3;}
+            return index;
+         }();
+         return _U.cmp(pilar2,
+         1) < 0 || (_U.cmp(pilar2,
+         7) > 0 || (_U.cmp(index2,
+         1) < 0 || (_U.cmp(index2,
+         6) > 0 || !_U.eq(A3(getM,
+         b,
+         pilar2,
+         index2),
+         $Maybe.Just(t))))) ? false : true;
       }();
    });
    var followPathR = F6(function (b,
@@ -5246,7 +5362,13 @@ Elm.Main.make = function (_elm) {
          pilar2,
          index2),
          $Maybe.Just(t)) ? false : _U.eq(remain2,
-         1) ? true : A6(followPathR,
+         1) || _U.eq(remain2,
+         2) && A5(opposite,
+         b,
+         t,
+         pilar2,
+         index2,
+         path) ? true : A6(followPathR,
          b,
          t,
          pilar2,
@@ -5255,19 +5377,19 @@ Elm.Main.make = function (_elm) {
          remain2);
       }();
    });
-   var followPath = function (_v19) {
+   var followPath = function (_v30) {
       return function () {
-         switch (_v19.ctor)
+         switch (_v30.ctor)
          {case "_Tuple5":
             return A6(followPathR,
-              _v19._0,
-              _v19._1,
-              _v19._2,
-              _v19._3,
-              _v19._4,
+              _v30._0,
+              _v30._1,
+              _v30._2,
+              _v30._3,
+              _v30._4,
               4);}
          _U.badCase($moduleName,
-         "on line 168, column 37 to 71");
+         "on line 297, column 37 to 71");
       }();
    };
    var analyzeState = F4(function (b,
@@ -5327,19 +5449,6 @@ Elm.Main.make = function (_elm) {
                     ,_4: 8}])),
       true);
    });
-   var tiedGame = function (b) {
-      return $Basics.not(A2(containsL,
-      A2($List.map,
-      isFull,
-      _L.fromArray([A2(getL,b,1)
-                   ,A2(getL,b,2)
-                   ,A2(getL,b,3)
-                   ,A2(getL,b,4)
-                   ,A2(getL,b,5)
-                   ,A2(getL,b,6)
-                   ,A2(getL,b,7)])),
-      false));
-   };
    var getLIndexR = F3(function (l,
    elem,
    pos) {
@@ -5352,7 +5461,7 @@ Elm.Main.make = function (_elm) {
               pos + 1);
             case "[]": return bottom;}
          _U.badCase($moduleName,
-         "between lines 29 and 31");
+         "between lines 37 and 39");
       }();
    });
    var getLIndex = F2(function (l,
@@ -5376,7 +5485,7 @@ Elm.Main.make = function (_elm) {
               A4(putM,m._1,r - 1,c,elem));
             case "[]": return bottom;}
          _U.badCase($moduleName,
-         "between lines 57 and 59");
+         "between lines 65 and 67");
       }();
    });
    var updateBoard = F4(function (b,
@@ -5389,42 +5498,469 @@ Elm.Main.make = function (_elm) {
       index,
       $Maybe.Just(t));
    });
+   var makeMove = F2(function (model,
+   pilar) {
+      return function () {
+         var listPilar = A2(getL,
+         model.board,
+         pilar);
+         return isFull(listPilar) ? model : function () {
+            var coinsAux = model.coins + 1;
+            var index = A2(getLIndex,
+            listPilar,
+            $Maybe.Nothing);
+            return _U.replace([["board"
+                               ,A4(updateBoard,
+                               model.board,
+                               model.turn,
+                               pilar,
+                               index)]
+                              ,["turn",updateTurn(model.turn)]
+                              ,["coins",coinsAux]
+                              ,["status"
+                               ,A4(analyzeState,
+                               model.board,
+                               model.turn,
+                               pilar,
+                               index) ? Won : tiedGame(coinsAux) ? Tied : InGame]],
+            model);
+         }();
+      }();
+   });
+   var getStates = function (s) {
+      return A2($List.map,
+      function (pilar) {
+         return A2(generateState,
+         pilar,
+         A2(makeMove,s.model,pilar));
+      },
+      A2($List.filter,
+      function (pilar) {
+         return $Basics.not(isFull(A2(getL,
+         s.model.board,
+         pilar)));
+      },
+      _L.fromArray([1,2,3,4,5,6,7])));
+   };
    var update = F2(function (action,
    model) {
       return function () {
          switch (action.ctor)
          {case "Move":
-            return function () {
-                 var listPilar = A2(getL,
-                 model.board,
-                 action._0);
-                 return isFull(listPilar) ? model : function () {
-                    var index = A2(getLIndex,
-                    listPilar,
-                    $Maybe.Nothing);
-                    return _U.replace([["board"
-                                       ,A4(updateBoard,
-                                       model.board,
-                                       model.turn,
-                                       action._0,
-                                       index)]
-                                      ,["turn",updateTurn(model.turn)]
-                                      ,["state"
-                                       ,A4(analyzeState,
-                                       model.board,
-                                       model.turn,
-                                       action._0,
-                                       index) ? Won : InGame]],
-                    model);
-                 }();
-              }();
+            return A2(makeMove,
+              model,
+              action._0);
             case "Replay": return init;
             case "Start":
-            return _U.replace([["state"
+            return _U.replace([["status"
                                ,InGame]],
               model);}
          _U.badCase($moduleName,
-         "between lines 126 and 146");
+         "between lines 248 and 251");
+      }();
+   });
+   var Node = F2(function (a,b) {
+      return {ctor: "Node"
+             ,_0: a
+             ,_1: b};
+   });
+   var generateTree = F2(function (p,
+   s) {
+      return !_U.eq(p,
+      prof) && (_U.eq(p,
+      0) || !_U.eq(s.model.status,
+      InGame)) ? A2(Node,
+      s,
+      _L.fromArray([])) : A2(Node,
+      s,
+      A2($List.map,
+      generateTree(p - 1),
+      getStates(s)));
+   });
+   var unJust = function (_v45) {
+      return function () {
+         switch (_v45.ctor)
+         {case "Just": return _v45._0;}
+         _U.badCase($moduleName,
+         "on line 17, column 20 to 21");
+      }();
+   };
+   var getH1 = function (s) {
+      return _U.eq(s.model.status,
+      Won) ? !_U.eq(s.model.turn,
+      unJust(s.model.ai)) ? inf : -1 * inf : 0;
+   };
+   var getHeuristic = function (s) {
+      return getH1(s);
+   };
+   var minimaxR = F2(function (p,
+   _v48) {
+      return function () {
+         switch (_v48.ctor)
+         {case "Node":
+            return function () {
+                 var i = !_U.eq(p,
+                 prof) && (_U.eq(p,
+                 0) || !_U.eq(_v48._0.model.status,
+                 InGame)) ? A2(initInfo,
+                 getHeuristic(_v48._0),
+                 _v48._0.info.move) : _U.eq(_v48._0.model.turn,
+                 unJust(_v48._0.model.ai)) ? A2($Debug.watch,
+                 "MAX",
+                 getMax(A2($List.map,
+                 minimaxR(p - 1),
+                 _v48._1))) : A2($Debug.watch,
+                 "MIN",
+                 getMin(A2($List.map,
+                 minimaxR(p - 1),
+                 _v48._1)));
+                 return A2(Node,
+                 _U.replace([["info",i]],
+                 _v48._0),
+                 _v48._1);
+              }();}
+         _U.badCase($moduleName,
+         "between lines 120 and 133");
+      }();
+   });
+   var minimax = F2(function (s,
+   p) {
+      return getHead(A2(minimaxR,
+      p,
+      A2(generateTree,p,s))).info;
+   });
+   var ai = function (model) {
+      return A2(minimax,
+      A2(generateState,0,model),
+      prof);
+   };
+   var getViewInGameCPU = F2(function (address,
+   model) {
+      return function () {
+         var info = ai(model);
+         return A2($Html.div,
+         _L.fromArray([]),
+         _L.fromArray([A2($Html.div,
+                      _L.fromArray([]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text("Thinking...")]))
+                                   ,A2($Html.button,
+                                   _L.fromArray([A2($Html$Events.onClick,
+                                   address,
+                                   Move(info.move))]),
+                                   _L.fromArray([$Html.text("Think!")]))
+                                   ,A2($Html.div,
+                                   _L.fromArray([inline]),
+                                   _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text($Basics.toString(info.heuristic))]))]))
+                                   ,A2($Html.div,
+                                   _L.fromArray([inline]),
+                                   _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text($Basics.toString(info.move))]))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   1,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   2,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   3,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   4,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   5,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   6,
+                                   1))]))]))
+                      ,A2($Html.div,
+                      _L.fromArray([inline]),
+                      _L.fromArray([A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   6))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   5))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   4))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   3))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   2))]))
+                                   ,A2($Html.h2,
+                                   _L.fromArray([]),
+                                   _L.fromArray([$Html.text(A3(getStringBoard,
+                                   model.board,
+                                   7,
+                                   1))]))]))]));
+      }();
+   });
+   var getH2 = function (s) {
+      return !_U.eq(s.model.turn,
+      unJust(s.model.ai)) ? 0 : 10;
+   };
+   var just = function (a) {
+      return $Maybe.Just(a);
+   };
+   var view = F2(function (address,
+   model) {
+      return function () {
+         var _v52 = model.status;
+         switch (_v52.ctor)
+         {case "InGame":
+            return _U.eq(model.ai,
+              just(model.turn)) ? A2(getViewInGameCPU,
+              address,
+              model) : A2(getViewInGameHuman,
+              address,
+              model);
+            case "Starting":
+            return A2(getViewStart,
+              address,
+              model);
+            case "Tied":
+            return A2(getViewTied,
+              address,
+              model);
+            case "Won":
+            return A2(getViewWon,
+              address,
+              model);}
+         _U.badCase($moduleName,
+         "between lines 381 and 394");
       }();
    });
    var main = $StartApp.start({_: {}
@@ -5432,6 +5968,9 @@ Elm.Main.make = function (_elm) {
                               ,update: update
                               ,view: view});
    _elm.Main.values = {_op: _op
+                      ,just: just
+                      ,unJust: unJust
+                      ,Node: Node
                       ,bottom: bottom
                       ,getL: getL
                       ,getLIndex: getLIndex
@@ -5442,6 +5981,23 @@ Elm.Main.make = function (_elm) {
                       ,getM: getM
                       ,putM: putM
                       ,emptyMatrix: emptyMatrix
+                      ,prof: prof
+                      ,inf: inf
+                      ,Info: Info
+                      ,initInfo: initInfo
+                      ,State: State
+                      ,ai: ai
+                      ,generateState: generateState
+                      ,generateTree: generateTree
+                      ,getStates: getStates
+                      ,minimax: minimax
+                      ,minimaxR: minimaxR
+                      ,getHeuristic: getHeuristic
+                      ,getMax: getMax
+                      ,getMin: getMin
+                      ,getHead: getHead
+                      ,getH1: getH1
+                      ,getH2: getH2
                       ,Black: Black
                       ,White: White
                       ,Starting: Starting
@@ -5458,15 +6014,22 @@ Elm.Main.make = function (_elm) {
                       ,Start: Start
                       ,Replay: Replay
                       ,update: update
+                      ,makeMove: makeMove
                       ,updateTurn: updateTurn
                       ,updateBoard: updateBoard
                       ,isFull: isFull
                       ,analyzeState: analyzeState
                       ,followPath: followPath
                       ,followPathR: followPathR
+                      ,opposite: opposite
                       ,tiedGame: tiedGame
                       ,inline: inline
                       ,view: view
+                      ,getViewStart: getViewStart
+                      ,getViewInGameHuman: getViewInGameHuman
+                      ,getViewInGameCPU: getViewInGameCPU
+                      ,getViewWon: getViewWon
+                      ,getViewTied: getViewTied
                       ,main: main};
    return _elm.Main.values;
 };
