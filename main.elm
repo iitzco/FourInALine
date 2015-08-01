@@ -73,7 +73,7 @@ emptyMatrix row col elem = List.repeat row (List.repeat col elem)
 --AI
 
 prof : Int
-prof = 2
+prof = 4
 
 inf : Int
 inf = 1000
@@ -81,11 +81,12 @@ inf = 1000
 type alias Info =
     {
     move : Int,
+    bestMove : Int,
     heuristic : Int
     }
 
-initInfo : Int -> Int -> Info
-initInfo heuristicParam moveParam = { move = moveParam , heuristic = heuristicParam }
+initInfo : Int -> Int -> Int -> Info
+initInfo heuristicParam moveParam bestMoveParam = { move = moveParam , heuristic = heuristicParam, bestMove = bestMoveParam }
 
 type alias State = 
     {
@@ -100,7 +101,7 @@ generateState : Int -> Model -> State
 generateState moveParam modelParam = 
                 {
                 model = modelParam,
-                info = initInfo 0 moveParam
+                info = initInfo 0 moveParam 0
                 }
 
 generateTree : Int -> State -> GTree State
@@ -119,16 +120,16 @@ minimaxR : Int -> GTree State -> GTree State
 minimaxR p (Node s l) = 
     let i = 
         if (p/=prof && (p == 0 ||  s.model.status /= InGame))
-            then initInfo (getHeuristic s) s.info.move
+            then initInfo (getHeuristic s) s.info.move s.info.move
             else
                 if (s.model.turn == unJust s.model.ai)
                     then
                         --getMax (List.map (minimaxR (p-1)) l) s.info.move
-                        Debug.watch "MAX" (getMax (List.map (minimaxR (p-1)) l))
+                        Debug.watch "MAX" (getMax s (List.map (minimaxR (p-1)) l)) 
                         --getMax ( Debug.watch "ListMax" (List.map (minimaxR (p-1)) l)) s.info.move                   
                     else
                         --getMin (List.map (minimaxR (p-1)) l) s.info.move
-                        Debug.watch "MIN" (getMin (List.map (minimaxR (p-1)) l))
+                        Debug.watch "MIN" (getMin s (List.map (minimaxR (p-1)) l))
                         --getMin ( Debug.watch "ListMin" (List.map (minimaxR (p-1)) l)) s.info.move
     in Node { s | info <- i} l
 
@@ -147,17 +148,17 @@ getHeuristic s = getH1 s
 --        [] -> initInfo (inf+1) 1
 --        x::xs -> let min = getMin xs m in if ((getHead x).info.heuristic <= min.heuristic) then initInfo (getHead x).info.heuristic m  else min
 
-getMax : List (GTree State) ->  Info
-getMax l  = 
+getMax : State -> List (GTree State) ->  Info
+getMax s l  = 
     case l of
-        [] -> initInfo ((-1) * (inf+1)) 0
-        x::xs -> let max = getMax xs in if ((getHead x).info.heuristic >= max.heuristic) then initInfo (getHead x).info.heuristic (getHead x).info.move  else max
+        [] -> initInfo ((-1) * (inf+1)) 0 s.info.move
+        x::xs -> let max = getMax s xs in if ((getHead x).info.heuristic >= max.heuristic) then initInfo (getHead x).info.heuristic s.info.move (getHead x).info.move  else max
 
-getMin : List (GTree State) -> Info
-getMin l = 
+getMin : State -> List (GTree State) -> Info
+getMin s l = 
     case l of
-        [] -> initInfo (inf+1) 0
-        x::xs -> let min = getMin xs in if ((getHead x).info.heuristic <= min.heuristic) then initInfo (getHead x).info.heuristic (getHead x).info.move  else min
+        [] -> initInfo (inf+1) 0 s.info.move
+        x::xs -> let min = getMin s xs in if ((getHead x).info.heuristic <= min.heuristic) then initInfo (getHead x).info.heuristic s.info.move (getHead x).info.move  else min
 
 
 getHead : GTree State -> State
@@ -480,9 +481,7 @@ getViewInGameCPU address model =
         div []
             [ 
             div [] [h2 [] [text "Thinking..."],
-                    button [onClick address (Move info.move)] [ text "Think!" ],
-                    div [inline] [h2 [] [text (toString info.heuristic)]],
-                    div [inline] [h2 [] [text (toString info.move)]]],
+                    button [onClick address (Move info.bestMove)] [ text "Think!" ]],
             div [inline]
                 [
                 h2 [] [text (getStringBoard model.board 1 6)],

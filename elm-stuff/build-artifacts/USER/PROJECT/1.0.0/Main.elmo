@@ -60,7 +60,7 @@ Elm.Main.make = function (_elm) {
             case "White":
             return "Turn: White";}
          _U.badCase($moduleName,
-         "between lines 237 and 239");
+         "between lines 238 and 240");
       }();
    };
    var formString = function (c) {
@@ -72,11 +72,11 @@ Elm.Main.make = function (_elm) {
                  {case "Black": return "  B  ";
                     case "White": return "  W  ";}
                  _U.badCase($moduleName,
-                 "between lines 231 and 233");
+                 "between lines 232 and 234");
               }();
             case "Nothing": return "  -  ";}
          _U.badCase($moduleName,
-         "between lines 229 and 233");
+         "between lines 230 and 234");
       }();
    };
    var Model = F5(function (a,
@@ -106,7 +106,7 @@ Elm.Main.make = function (_elm) {
          switch (_v4.ctor)
          {case "Node": return _v4._0;}
          _U.badCase($moduleName,
-         "on line 164, column 22 to 23");
+         "on line 165, column 22 to 23");
       }();
    };
    var State = F2(function (a,b) {
@@ -114,59 +114,69 @@ Elm.Main.make = function (_elm) {
              ,info: b
              ,model: a};
    });
-   var initInfo = F2(function (heuristicParam,
-   moveParam) {
+   var initInfo = F3(function (heuristicParam,
+   moveParam,
+   bestMoveParam) {
       return {_: {}
+             ,bestMove: bestMoveParam
              ,heuristic: heuristicParam
              ,move: moveParam};
    });
    var generateState = F2(function (moveParam,
    modelParam) {
       return {_: {}
-             ,info: A2(initInfo,0,moveParam)
+             ,info: A3(initInfo,
+             0,
+             moveParam,
+             0)
              ,model: modelParam};
    });
-   var Info = F2(function (a,b) {
+   var Info = F3(function (a,b,c) {
       return {_: {}
-             ,heuristic: b
+             ,bestMove: b
+             ,heuristic: c
              ,move: a};
    });
    var inf = 1000;
-   var getMax = function (l) {
+   var getMax = F2(function (s,l) {
       return function () {
          switch (l.ctor)
          {case "::": return function () {
-                 var max = getMax(l._1);
+                 var max = A2(getMax,s,l._1);
                  return _U.cmp(getHead(l._0).info.heuristic,
-                 max.heuristic) > -1 ? A2(initInfo,
+                 max.heuristic) > -1 ? A3(initInfo,
                  getHead(l._0).info.heuristic,
+                 s.info.move,
                  getHead(l._0).info.move) : max;
               }();
-            case "[]": return A2(initInfo,
+            case "[]": return A3(initInfo,
               -1 * (inf + 1),
-              0);}
+              0,
+              s.info.move);}
          _U.badCase($moduleName,
-         "between lines 152 and 154");
+         "between lines 153 and 155");
       }();
-   };
-   var getMin = function (l) {
+   });
+   var getMin = F2(function (s,l) {
       return function () {
          switch (l.ctor)
          {case "::": return function () {
-                 var min = getMin(l._1);
+                 var min = A2(getMin,s,l._1);
                  return _U.cmp(getHead(l._0).info.heuristic,
-                 min.heuristic) < 1 ? A2(initInfo,
+                 min.heuristic) < 1 ? A3(initInfo,
                  getHead(l._0).info.heuristic,
+                 s.info.move,
                  getHead(l._0).info.move) : min;
               }();
-            case "[]": return A2(initInfo,
+            case "[]": return A3(initInfo,
               inf + 1,
-              0);}
+              0,
+              s.info.move);}
          _U.badCase($moduleName,
-         "between lines 158 and 160");
+         "between lines 159 and 161");
       }();
-   };
-   var prof = 2;
+   });
+   var prof = 4;
    var emptyMatrix = F3(function (row,
    col,
    elem) {
@@ -1233,7 +1243,7 @@ Elm.Main.make = function (_elm) {
               _v30._4,
               4);}
          _U.badCase($moduleName,
-         "on line 297, column 37 to 71");
+         "on line 298, column 37 to 71");
       }();
    };
    var analyzeState = F4(function (b,
@@ -1400,7 +1410,7 @@ Elm.Main.make = function (_elm) {
                                ,InGame]],
               model);}
          _U.badCase($moduleName,
-         "between lines 248 and 251");
+         "between lines 249 and 252");
       }();
    });
    var Node = F2(function (a,b) {
@@ -1446,16 +1456,21 @@ Elm.Main.make = function (_elm) {
                  var i = !_U.eq(p,
                  prof) && (_U.eq(p,
                  0) || !_U.eq(_v48._0.model.status,
-                 InGame)) ? A2(initInfo,
+                 InGame)) ? A3(initInfo,
                  getHeuristic(_v48._0),
+                 _v48._0.info.move,
                  _v48._0.info.move) : _U.eq(_v48._0.model.turn,
                  unJust(_v48._0.model.ai)) ? A2($Debug.watch,
                  "MAX",
-                 getMax(A2($List.map,
+                 A2(getMax,
+                 _v48._0,
+                 A2($List.map,
                  minimaxR(p - 1),
                  _v48._1))) : A2($Debug.watch,
                  "MIN",
-                 getMin(A2($List.map,
+                 A2(getMin,
+                 _v48._0,
+                 A2($List.map,
                  minimaxR(p - 1),
                  _v48._1)));
                  return A2(Node,
@@ -1464,7 +1479,7 @@ Elm.Main.make = function (_elm) {
                  _v48._1);
               }();}
          _U.badCase($moduleName,
-         "between lines 120 and 133");
+         "between lines 121 and 134");
       }();
    });
    var minimax = F2(function (s,
@@ -1492,18 +1507,8 @@ Elm.Main.make = function (_elm) {
                                    ,A2($Html.button,
                                    _L.fromArray([A2($Html$Events.onClick,
                                    address,
-                                   Move(info.move))]),
-                                   _L.fromArray([$Html.text("Think!")]))
-                                   ,A2($Html.div,
-                                   _L.fromArray([inline]),
-                                   _L.fromArray([A2($Html.h2,
-                                   _L.fromArray([]),
-                                   _L.fromArray([$Html.text($Basics.toString(info.heuristic))]))]))
-                                   ,A2($Html.div,
-                                   _L.fromArray([inline]),
-                                   _L.fromArray([A2($Html.h2,
-                                   _L.fromArray([]),
-                                   _L.fromArray([$Html.text($Basics.toString(info.move))]))]))]))
+                                   Move(info.bestMove))]),
+                                   _L.fromArray([$Html.text("Think!")]))]))
                       ,A2($Html.div,
                       _L.fromArray([inline]),
                       _L.fromArray([A2($Html.h2,
@@ -1804,7 +1809,7 @@ Elm.Main.make = function (_elm) {
               address,
               model);}
          _U.badCase($moduleName,
-         "between lines 381 and 394");
+         "between lines 382 and 395");
       }();
    });
    var main = $StartApp.start({_: {}
