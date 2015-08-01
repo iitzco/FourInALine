@@ -15,7 +15,7 @@ Elm.Repl.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm);
    var tsol = {ctor: "_Tuple0"};
-   var deltron3030 = $Basics.toString(1);
+   var deltron3030 = $List.foldr;
    _elm.Repl.values = {_op: _op
                       ,deltron3030: deltron3030
                       ,tsol: tsol};

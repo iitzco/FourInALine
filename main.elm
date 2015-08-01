@@ -175,11 +175,32 @@ getH1 s = if (s.model.status == Won)
                 then inf
                 --Sometimes it gets here, sometimes not
                 else (-1*inf)
-            else 0
+            else let h = getH2 s
+                 in
+                    if (s.model.turn /= unJust s.model.ai)
+                        then h
+                        else (-1*h)
 
-getH2 s = if (s.model.turn /= unJust s.model.ai)
-            then 0
-            else 10
+-- checks lines of 3 
+getH2 : State -> Int
+getH2 s = 
+    let index = getLIndex (getL s.model.board s.info.move) (just s.model.turn)
+    in
+        let aux = List.foldr (\b c -> if b then c + 10 else c) 0 (List.map followPath [
+                                (s.model.board,s.model.turn,s.info.move, index, 1,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 2,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 3,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 4,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 5,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 6,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 7,3),
+                                (s.model.board,s.model.turn,s.info.move, index, 8,3)
+                            ])
+        in 
+            if (s.info.move == 4)
+                then aux + 100
+                else aux
+
 
 -- MODEL
 
@@ -233,11 +254,17 @@ formString c =
                     Black -> "  B  "
                     White -> "  W  " 
 
-getStringTurn : Turn -> String
-getStringTurn t = 
-    case t of
-        Black -> "Turn: Black"
-        White -> "Turn: White"
+getStringTurn : Model -> Turn -> String
+getStringTurn m t = 
+    if (m.ai==Nothing)
+        then
+            case t of
+                Black -> "Black"
+                White -> "White"
+        else
+            if (m.ai == (just t))
+                then "CPU"
+                else "Human"
 
 
 -- UPDATE
@@ -285,17 +312,17 @@ isFull l = not (containsL l Nothing)
 
 --TODO Analizar que pasa si pongo en el medio...
 analyzeState : Board -> Turn -> Int -> Int -> Bool
-analyzeState b t pilar index = containsL (List.map followPath   [(b,t,pilar,index,1),
-                                                                 (b,t,pilar,index,2),
-                                                                 (b,t,pilar,index,3),
-                                                                 (b,t,pilar,index,4),
-                                                                 (b,t,pilar,index,5),
-                                                                 (b,t,pilar,index,6),
-                                                                 (b,t,pilar,index,7),
-                                                                 (b,t,pilar,index,8)]) True
+analyzeState b t pilar index = containsL (List.map followPath   [(b,t,pilar,index,1,4),
+                                                                 (b,t,pilar,index,2,4),
+                                                                 (b,t,pilar,index,3,4),
+                                                                 (b,t,pilar,index,4,4),
+                                                                 (b,t,pilar,index,5,4),
+                                                                 (b,t,pilar,index,6,4),
+                                                                 (b,t,pilar,index,7,4),
+                                                                 (b,t,pilar,index,8,4)]) True
 
-followPath : (Board,Turn,Int,Int,Int) -> Bool
-followPath (b,t,pilar,index,path) = followPathR b t pilar index path 4
+followPath : (Board,Turn,Int,Int,Int,Int) -> Bool
+followPath (b,t,pilar,index,path,line) = followPathR b t pilar index path line
 
 followPathR : Board -> Turn -> Int -> Int -> Int -> Int -> Bool
 followPathR b t pilar index path remain = 
@@ -373,6 +400,38 @@ inline =
       ("text-align","center")
     ]
 
+center : Attribute
+center = 
+    style
+        [
+        ("margin","auto"),
+        ("width", "70%")        
+        ]
+
+bigButton : Attribute
+bigButton = 
+    style
+        [
+        ("width","200px"),
+        ("height","200px"),
+        ("margin-top","150px")
+        ]
+
+mediumButton : Attribute
+mediumButton = 
+    style
+        [
+        ("width","400px"),
+        ("height","50px")
+        ]
+
+smallButton : Attribute
+smallButton = 
+    style
+        [
+        ("backgroundColor","grey")
+        ]
+
 
 
 -- The idea is to manage AI reponse through the view simulating a "virtual player"
@@ -394,13 +453,13 @@ view address model =
             getViewTied address model
      
 getViewStart : Signal.Address Action -> Model -> Html
-getViewStart address model = div [] [button [onClick address (Start)] [ text "Play!" ]]
+getViewStart address model = div [center] [button [onClick address (Start), bigButton ] [ text "Play!" ]]
 
 getViewInGameHuman : Signal.Address Action -> Model -> Html
 getViewInGameHuman address model = 
-        div []
+        div [center]
             [ 
-            h1 [] [text (getStringTurn model.turn)],
+            h1 [] [text ("Turn: " ++ getStringTurn model model.turn)],
             div [inline]
                 [
                 h2 [] [text (getStringBoard model.board 1 6)],
@@ -409,7 +468,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 1 3)],
                 h2 [] [text (getStringBoard model.board 1 2)],
                 h2 [] [text (getStringBoard model.board 1 1)],
-                button [onClick address (Move 1)] [ text "-" ]
+                button [onClick address (Move 1),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -419,7 +478,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 2 3)],
                 h2 [] [text (getStringBoard model.board 2 2)],
                 h2 [] [text (getStringBoard model.board 2 1)],
-                button [onClick address (Move 2)] [ text "-" ]
+                button [onClick address (Move 2),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -429,7 +488,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 3 3)],
                 h2 [] [text (getStringBoard model.board 3 2)],
                 h2 [] [text (getStringBoard model.board 3 1)],
-                button [onClick address (Move 3)] [ text "-" ]
+                button [onClick address (Move 3),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -439,7 +498,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 4 3)],
                 h2 [] [text (getStringBoard model.board 4 2)],
                 h2 [] [text (getStringBoard model.board 4 1)],
-                button [onClick address (Move 4)] [ text "-" ]
+                button [onClick address (Move 4),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -449,7 +508,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 5 3)],
                 h2 [] [text (getStringBoard model.board 5 2)],
                 h2 [] [text (getStringBoard model.board 5 1)],
-                button [onClick address (Move 5)] [ text "-" ]
+                button [onClick address (Move 5),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -459,7 +518,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 6 3)],
                 h2 [] [text (getStringBoard model.board 6 2)],
                 h2 [] [text (getStringBoard model.board 6 1)],
-                button [onClick address (Move 6)] [ text "-" ]
+                button [onClick address (Move 6),smallButton] [ text "-" ]
                 ],
             div [inline]
                 [
@@ -469,7 +528,7 @@ getViewInGameHuman address model =
                 h2 [] [text (getStringBoard model.board 7 3)],
                 h2 [] [text (getStringBoard model.board 7 2)],
                 h2 [] [text (getStringBoard model.board 7 1)],
-                button [onClick address (Move 7)] [ text "-" ]
+                button [onClick address (Move 7),smallButton] [ text "-" ]
                 ]
             ]
 
@@ -478,10 +537,9 @@ getViewInGameCPU address model =
     let info = ai model
     in
     -- TODO
-        div []
+        div [center]
             [ 
-            div [] [h2 [] [text "Thinking..."],
-                    button [onClick address (Move info.bestMove)] [ text "Think!" ]],
+            h1 [] [text (getStringTurn model model.turn ++ " thinking...")],
             div [inline]
                 [
                 h2 [] [text (getStringBoard model.board 1 6)],
@@ -537,14 +595,14 @@ getViewInGameCPU address model =
                 h2 [] [text (getStringBoard model.board 7 4)],
                 h2 [] [text (getStringBoard model.board 7 3)],
                 h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]]]  
+                h2 [] [text (getStringBoard model.board 7 1)]],
+            div [] [button [onClick address (Move info.bestMove),mediumButton] [ text "Move!" ]]]  
 
 getViewWon : Signal.Address Action -> Model -> Html
 getViewWon address model = 
-        div []
+        div [center]
             [ 
-            div [] [h2 [] [text "Won"],h2 [] [text (getStringTurn model.turn)]],
-            button [onClick address (Replay)] [ text "Replay" ],
+            div [] [h1 [] [text (getStringTurn model (updateTurn model.turn) ++ " Won!")]],
             div [inline]
                 [
                 h2 [] [text (getStringBoard model.board 1 6)],
@@ -600,15 +658,15 @@ getViewWon address model =
                 h2 [] [text (getStringBoard model.board 7 4)],
                 h2 [] [text (getStringBoard model.board 7 3)],
                 h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]]]    
+                h2 [] [text (getStringBoard model.board 7 1)]],
+            div [] [button [onClick address (Replay),mediumButton] [ text "Replay" ]]]   
 
 
 getViewTied : Signal.Address Action -> Model -> Html
 getViewTied address model = 
-        div []
-            [
+        div [center]
+            [ 
             div [] [h2 [] [text "Tied"]],
-            button [onClick address (Replay)] [ text "Replay" ],
             div [inline]
                 [
                 h2 [] [text (getStringBoard model.board 1 6)],
@@ -664,7 +722,8 @@ getViewTied address model =
                 h2 [] [text (getStringBoard model.board 7 4)],
                 h2 [] [text (getStringBoard model.board 7 3)],
                 h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]]]
+                h2 [] [text (getStringBoard model.board 7 1)]],
+            div [] [button [onClick address (Replay)] [ text "Replay" ]]]   
 
 -- main
 
