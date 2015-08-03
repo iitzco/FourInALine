@@ -3,9 +3,11 @@ Contains Model, Update, View
 -}
 
 import Html exposing (..)
-import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (style,type',checked,src)
+import Html.Events exposing (onClick,targetChecked,on)
 import StartApp
+import Svg exposing (svg,circle)
+import Svg.Attributes exposing (cx,fill,cy,r)
 import Debug
 
 --API
@@ -72,9 +74,6 @@ emptyMatrix row col elem = List.repeat row (List.repeat col elem)
 
 --AI
 
-prof : Int
-prof = 4
-
 inf : Int
 inf = 1000
 
@@ -95,7 +94,7 @@ type alias State =
     }
 
 ai : Model -> Info
-ai model = minimax (generateState 0 model) prof
+ai model = minimax (generateState 0 model) model.prof
 
 generateState : Int -> Model -> State
 generateState moveParam modelParam = 
@@ -105,7 +104,7 @@ generateState moveParam modelParam =
                 }
 
 generateTree : Int -> State -> GTree State
-generateTree p s = if (p/=prof && (p == 0 || s.model.status/=InGame)) then (Node s []) else (Node s (List.map (generateTree (p-1)) (getStates s)))
+generateTree p s = if (p/=s.model.prof && (p == 0 || s.model.status/=InGame)) then (Node s []) else (Node s (List.map (generateTree (p-1)) (getStates s)))
 
 
 getStates : State -> List State
@@ -119,7 +118,7 @@ minimax s p = (getHead (minimaxR p (generateTree p s))).info
 minimaxR : Int -> GTree State -> GTree State
 minimaxR p (Node s l) = 
     let i = 
-        if (p/=prof && (p == 0 ||  s.model.status /= InGame))
+        if (p/=s.model.prof && (p == 0 ||  s.model.status /= InGame))
             then initInfo (getHeuristic s) s.info.move s.info.move
             else
                 if (s.model.turn == unJust s.model.ai)
@@ -218,13 +217,14 @@ type alias Model =
     turn : Turn,
     status : Status,
     coins : Int,
-    ai : Maybe Coin
+    ai : Maybe Coin,
+    prof : Int
     }
 
 -- ai (artificial intelligence) can be: Nothing (2 human players, no CPU) or Just c (CPU moves c)
 
 init : Model
-init = { board = getEmptyBoard , turn = Black , status = Starting, coins = 0, ai = Just White }
+init = { board = getEmptyBoard , turn = Black , status = Starting, coins = 0, ai = Nothing, prof = 4}
 
 
 {-6x7 board:
@@ -259,8 +259,8 @@ getStringTurn m t =
     if (m.ai==Nothing)
         then
             case t of
-                Black -> "Black"
-                White -> "White"
+                Black -> "Red"
+                White -> "Blue"
         else
             if (m.ai == (just t))
                 then "CPU"
@@ -269,12 +269,14 @@ getStringTurn m t =
 
 -- UPDATE
 
-type Action = Move Int | Start | Replay
+type Action = Move Int | Start | Replay | Prof Int | AI (Maybe Turn)
 
 update : Action -> Model -> Model
 update action model = 
     case action of
         Start -> {model | status <- InGame}
+        Prof p -> {model | prof <- p}
+        AI t -> {model | ai <- t}
         Replay -> init
         Move pilar -> makeMove model pilar
 
@@ -404,8 +406,8 @@ center : Attribute
 center = 
     style
         [
-        ("margin","auto"),
-        ("width", "70%")        
+        ("margin","0 auto"),
+        ("width", "90%")        
         ]
 
 bigButton : Attribute
@@ -414,7 +416,7 @@ bigButton =
         [
         ("width","200px"),
         ("height","200px"),
-        ("margin-top","150px")
+        ("margin-top","10px")
         ]
 
 mediumButton : Attribute
@@ -432,6 +434,22 @@ smallButton =
         ("backgroundColor","grey")
         ]
 
+tableSize : Attribute
+tableSize = 
+    style
+        [
+        ("width","1000px"),
+        ("height","200px")
+        
+        ]
+
+tableBorder : Attribute
+tableBorder =
+    style
+        [
+        ("border","1px solid black")
+        ]
+
 
 
 -- The idea is to manage AI reponse through the view simulating a "virtual player"
@@ -447,283 +465,233 @@ view address model =
                     getViewInGameCPU address model
                 else 
                     getViewInGameHuman address model
-        Won ->
-            getViewWon address model
-        Tied ->
-            getViewTied address model
+        _ -> getViewWonTied address model
+marginUp : Attribute
+marginUp =
+    style
+        [
+        ("margin","25px")
+        ]
      
 getViewStart : Signal.Address Action -> Model -> Html
-getViewStart address model = div [center] [button [onClick address (Start), bigButton ] [ text "Play!" ]]
+getViewStart address model = 
+        if (model.ai == Nothing)
+            then
+                
+                div [center]
+                    [   
+                        img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+                        h3 [] [text "Select Mode: "],
+                        input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
+                        input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
+                        input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] [],
+                        img [src "img/playbutton.png",Html.Attributes.width 250,onClick address Start,marginUp] []]
+            else
+                div [center]
+                    [ 
+                    div [] [  
+                        img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+                        h3 [] [text "Select Mode: "],
+                        input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
+                        input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
+                        input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] [] ],
+                    div [] [
+                        h3 [] [text "Select Level:"],
+                        input [ type' "radio", checked (model.prof == 2) , on "change" targetChecked (\_ -> Signal.message address (Prof 2))] []  , text " Easy" , br [] []  ,
+                        input [ type' "radio", checked (model.prof == 4), on "change" targetChecked (\_ -> Signal.message address (Prof 4))] []  , text " Medium" , br [] []  ,
+                        input [ type' "radio", checked (model.prof == 5), on "change" targetChecked (\_ -> Signal.message address (Prof 5))] []  , text " Hard" , br [] []  ],
+                        img [src "img/playbutton.png",Html.Attributes.width 250,onClick address Start,marginUp] []]
+
+getFigure : Maybe Turn -> Svg.Svg
+getFigure t =
+    case  t of
+        Nothing -> Svg.circle [cx "40",cy "40",r "35", fill "White"] []
+        Just Black -> Svg.circle [cx "40",cy "40",r "35", fill "Red"] []
+        Just White -> Svg.circle [cx "40",cy "40",r "35", fill "Blue"] []
+
+getSvg : Board -> Int -> Int -> Html
+getSvg b r c = Svg.svg [Svg.Attributes.width "75",Svg.Attributes.height "75"] [getFigure (getM b r c)]
+
 
 getViewInGameHuman : Signal.Address Action -> Model -> Html
 getViewInGameHuman address model = 
         div [center]
             [ 
-            h1 [] [text ("Turn: " ++ getStringTurn model model.turn)],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 1 6)],
-                h2 [] [text (getStringBoard model.board 1 5)],
-                h2 [] [text (getStringBoard model.board 1 4)],
-                h2 [] [text (getStringBoard model.board 1 3)],
-                h2 [] [text (getStringBoard model.board 1 2)],
-                h2 [] [text (getStringBoard model.board 1 1)],
-                button [onClick address (Move 1),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 2 6)],
-                h2 [] [text (getStringBoard model.board 2 5)],
-                h2 [] [text (getStringBoard model.board 2 4)],
-                h2 [] [text (getStringBoard model.board 2 3)],
-                h2 [] [text (getStringBoard model.board 2 2)],
-                h2 [] [text (getStringBoard model.board 2 1)],
-                button [onClick address (Move 2),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 3 6)],
-                h2 [] [text (getStringBoard model.board 3 5)],
-                h2 [] [text (getStringBoard model.board 3 4)],
-                h2 [] [text (getStringBoard model.board 3 3)],
-                h2 [] [text (getStringBoard model.board 3 2)],
-                h2 [] [text (getStringBoard model.board 3 1)],
-                button [onClick address (Move 3),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 4 6)],
-                h2 [] [text (getStringBoard model.board 4 5)],
-                h2 [] [text (getStringBoard model.board 4 4)],
-                h2 [] [text (getStringBoard model.board 4 3)],
-                h2 [] [text (getStringBoard model.board 4 2)],
-                h2 [] [text (getStringBoard model.board 4 1)],
-                button [onClick address (Move 4),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 5 6)],
-                h2 [] [text (getStringBoard model.board 5 5)],
-                h2 [] [text (getStringBoard model.board 5 4)],
-                h2 [] [text (getStringBoard model.board 5 3)],
-                h2 [] [text (getStringBoard model.board 5 2)],
-                h2 [] [text (getStringBoard model.board 5 1)],
-                button [onClick address (Move 5),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 6 6)],
-                h2 [] [text (getStringBoard model.board 6 5)],
-                h2 [] [text (getStringBoard model.board 6 4)],
-                h2 [] [text (getStringBoard model.board 6 3)],
-                h2 [] [text (getStringBoard model.board 6 2)],
-                h2 [] [text (getStringBoard model.board 6 1)],
-                button [onClick address (Move 6),smallButton] [ text "-" ]
-                ],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 7 6)],
-                h2 [] [text (getStringBoard model.board 7 5)],
-                h2 [] [text (getStringBoard model.board 7 4)],
-                h2 [] [text (getStringBoard model.board 7 3)],
-                h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)],
-                button [onClick address (Move 7),smallButton] [ text "-" ]
-                ]
-            ]
+            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+            h3 [] [text ("Turn: " ++ getStringTurn model model.turn)],
+            table [] [
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]]
 
 getViewInGameCPU : Signal.Address Action -> Model -> Html
 getViewInGameCPU address model = 
     let info = ai model
     in
-    -- TODO
+            div [center] [ 
+            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+            h3 [] [text (getStringTurn model model.turn ++ " thinking...")],
+                            div [] [button [onClick address (Move info.bestMove),mediumButton] [ text "Move!"]],
+            table [] [
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]]
+
+getStringStatus : Model -> String
+getStringStatus m = 
+    case m.status of
+        Won -> (getStringTurn m (updateTurn m.turn)) ++ " Won!"
+        Tied -> "Tied"
+        _ -> " "
+
+getViewWonTied : Signal.Address Action -> Model -> Html
+getViewWonTied address model = 
+        let s = getStringStatus model
+        in
         div [center]
             [ 
-            h1 [] [text (getStringTurn model model.turn ++ " thinking...")],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 1 6)],
-                h2 [] [text (getStringBoard model.board 1 5)],
-                h2 [] [text (getStringBoard model.board 1 4)],
-                h2 [] [text (getStringBoard model.board 1 3)],
-                h2 [] [text (getStringBoard model.board 1 2)],
-                h2 [] [text (getStringBoard model.board 1 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 2 6)],
-                h2 [] [text (getStringBoard model.board 2 5)],
-                h2 [] [text (getStringBoard model.board 2 4)],
-                h2 [] [text (getStringBoard model.board 2 3)],
-                h2 [] [text (getStringBoard model.board 2 2)],
-                h2 [] [text (getStringBoard model.board 2 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 3 6)],
-                h2 [] [text (getStringBoard model.board 3 5)],
-                h2 [] [text (getStringBoard model.board 3 4)],
-                h2 [] [text (getStringBoard model.board 3 3)],
-                h2 [] [text (getStringBoard model.board 3 2)],
-                h2 [] [text (getStringBoard model.board 3 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 4 6)],
-                h2 [] [text (getStringBoard model.board 4 5)],
-                h2 [] [text (getStringBoard model.board 4 4)],
-                h2 [] [text (getStringBoard model.board 4 3)],
-                h2 [] [text (getStringBoard model.board 4 2)],
-                h2 [] [text (getStringBoard model.board 4 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 5 6)],
-                h2 [] [text (getStringBoard model.board 5 5)],
-                h2 [] [text (getStringBoard model.board 5 4)],
-                h2 [] [text (getStringBoard model.board 5 3)],
-                h2 [] [text (getStringBoard model.board 5 2)],
-                h2 [] [text (getStringBoard model.board 5 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 6 6)],
-                h2 [] [text (getStringBoard model.board 6 5)],
-                h2 [] [text (getStringBoard model.board 6 4)],
-                h2 [] [text (getStringBoard model.board 6 3)],
-                h2 [] [text (getStringBoard model.board 6 2)],
-                h2 [] [text (getStringBoard model.board 6 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 7 6)],
-                h2 [] [text (getStringBoard model.board 7 5)],
-                h2 [] [text (getStringBoard model.board 7 4)],
-                h2 [] [text (getStringBoard model.board 7 3)],
-                h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]],
-            div [] [button [onClick address (Move info.bestMove),mediumButton] [ text "Move!" ]]]  
-
-getViewWon : Signal.Address Action -> Model -> Html
-getViewWon address model = 
-        div [center]
-            [ 
-            div [] [h1 [] [text (getStringTurn model (updateTurn model.turn) ++ " Won!")]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 1 6)],
-                h2 [] [text (getStringBoard model.board 1 5)],
-                h2 [] [text (getStringBoard model.board 1 4)],
-                h2 [] [text (getStringBoard model.board 1 3)],
-                h2 [] [text (getStringBoard model.board 1 2)],
-                h2 [] [text (getStringBoard model.board 1 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 2 6)],
-                h2 [] [text (getStringBoard model.board 2 5)],
-                h2 [] [text (getStringBoard model.board 2 4)],
-                h2 [] [text (getStringBoard model.board 2 3)],
-                h2 [] [text (getStringBoard model.board 2 2)],
-                h2 [] [text (getStringBoard model.board 2 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 3 6)],
-                h2 [] [text (getStringBoard model.board 3 5)],
-                h2 [] [text (getStringBoard model.board 3 4)],
-                h2 [] [text (getStringBoard model.board 3 3)],
-                h2 [] [text (getStringBoard model.board 3 2)],
-                h2 [] [text (getStringBoard model.board 3 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 4 6)],
-                h2 [] [text (getStringBoard model.board 4 5)],
-                h2 [] [text (getStringBoard model.board 4 4)],
-                h2 [] [text (getStringBoard model.board 4 3)],
-                h2 [] [text (getStringBoard model.board 4 2)],
-                h2 [] [text (getStringBoard model.board 4 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 5 6)],
-                h2 [] [text (getStringBoard model.board 5 5)],
-                h2 [] [text (getStringBoard model.board 5 4)],
-                h2 [] [text (getStringBoard model.board 5 3)],
-                h2 [] [text (getStringBoard model.board 5 2)],
-                h2 [] [text (getStringBoard model.board 5 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 6 6)],
-                h2 [] [text (getStringBoard model.board 6 5)],
-                h2 [] [text (getStringBoard model.board 6 4)],
-                h2 [] [text (getStringBoard model.board 6 3)],
-                h2 [] [text (getStringBoard model.board 6 2)],
-                h2 [] [text (getStringBoard model.board 6 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 7 6)],
-                h2 [] [text (getStringBoard model.board 7 5)],
-                h2 [] [text (getStringBoard model.board 7 4)],
-                h2 [] [text (getStringBoard model.board 7 3)],
-                h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]],
-            div [] [button [onClick address (Replay),mediumButton] [ text "Replay" ]]]   
-
-
-getViewTied : Signal.Address Action -> Model -> Html
-getViewTied address model = 
-        div [center]
-            [ 
-            div [] [h2 [] [text "Tied"]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 1 6)],
-                h2 [] [text (getStringBoard model.board 1 5)],
-                h2 [] [text (getStringBoard model.board 1 4)],
-                h2 [] [text (getStringBoard model.board 1 3)],
-                h2 [] [text (getStringBoard model.board 1 2)],
-                h2 [] [text (getStringBoard model.board 1 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 2 6)],
-                h2 [] [text (getStringBoard model.board 2 5)],
-                h2 [] [text (getStringBoard model.board 2 4)],
-                h2 [] [text (getStringBoard model.board 2 3)],
-                h2 [] [text (getStringBoard model.board 2 2)],
-                h2 [] [text (getStringBoard model.board 2 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 3 6)],
-                h2 [] [text (getStringBoard model.board 3 5)],
-                h2 [] [text (getStringBoard model.board 3 4)],
-                h2 [] [text (getStringBoard model.board 3 3)],
-                h2 [] [text (getStringBoard model.board 3 2)],
-                h2 [] [text (getStringBoard model.board 3 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 4 6)],
-                h2 [] [text (getStringBoard model.board 4 5)],
-                h2 [] [text (getStringBoard model.board 4 4)],
-                h2 [] [text (getStringBoard model.board 4 3)],
-                h2 [] [text (getStringBoard model.board 4 2)],
-                h2 [] [text (getStringBoard model.board 4 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 5 6)],
-                h2 [] [text (getStringBoard model.board 5 5)],
-                h2 [] [text (getStringBoard model.board 5 4)],
-                h2 [] [text (getStringBoard model.board 5 3)],
-                h2 [] [text (getStringBoard model.board 5 2)],
-                h2 [] [text (getStringBoard model.board 5 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 6 6)],
-                h2 [] [text (getStringBoard model.board 6 5)],
-                h2 [] [text (getStringBoard model.board 6 4)],
-                h2 [] [text (getStringBoard model.board 6 3)],
-                h2 [] [text (getStringBoard model.board 6 2)],
-                h2 [] [text (getStringBoard model.board 6 1)]],
-            div [inline]
-                [
-                h2 [] [text (getStringBoard model.board 7 6)],
-                h2 [] [text (getStringBoard model.board 7 5)],
-                h2 [] [text (getStringBoard model.board 7 4)],
-                h2 [] [text (getStringBoard model.board 7 3)],
-                h2 [] [text (getStringBoard model.board 7 2)],
-                h2 [] [text (getStringBoard model.board 7 1)]],
-            div [] [button [onClick address (Replay)] [ text "Replay" ]]]   
+            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+            div [] [h3 [] [text s]],
+            div [] [button [onClick address (Replay),mediumButton] [ text "Replay" ]],
+            table [] [
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]] 
 
 -- main
 
