@@ -9,6 +9,9 @@ import StartApp
 import Svg exposing (svg,circle)
 import Svg.Attributes exposing (cx,fill,cy,r)
 import Debug
+import Window exposing (..)
+import Time exposing (delay,second)
+
 
 --API
 
@@ -269,7 +272,7 @@ getStringTurn m t =
 
 -- UPDATE
 
-type Action = Move Int | Start | Replay | Prof Int | AI (Maybe Turn)
+type Action = Move Int | Start | Replay | Prof Int | AI (Maybe Turn) | MoveCPU
 
 update : Action -> Model -> Model
 update action model = 
@@ -279,6 +282,7 @@ update action model =
         AI t -> {model | ai <- t}
         Replay -> init
         Move pilar -> makeMove model pilar
+        MoveCPU -> makeMove model (ai model).bestMove
 
 makeMove : Model -> Int -> Model
 makeMove model pilar = 
@@ -396,19 +400,25 @@ inline : Attribute
 inline =
   style
     [ ("display", "inline-block"),
-      ("width","20px"),
-      ("margin-left","20px"),
-      ("margin-right","20px"),
-      ("text-align","center")
+      ("width","300px")
+      --("margin-left","20px"),
+      --("margin-right","20px"),
+      --("text-align","center")
     ]
+
+
+width : Int
+width = 750
 
 center : Attribute
 center = 
     style
         [
         ("margin","0 auto"),
-        ("width", "90%")        
+        ("width", toString width ++ "px")      
         ]
+
+
 
 bigButton : Attribute
 bigButton = 
@@ -473,159 +483,197 @@ marginUp =
         ("margin","25px")
         ]
      
+
+getImageLogo : Html
+getImageLogo = img [src "img/logo.png",Html.Attributes.width (width-50),marginUp] []
+
+getModeSelect : Signal.Address Action -> Model -> Html
+getModeSelect address model = 
+        div [style [("margin-left", "100px")]] [
+            h3 [] [text "Select Mode: "],
+            input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
+            input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
+            input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] []]
+
+getLevelSelect : Signal.Address Action -> Model -> Html
+getLevelSelect address model =
+            div [style [("margin-left", "100px")]] [
+                div [inline] [
+                    h3 [] [text "Select Mode: "],
+                    input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
+                    input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
+                    input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] [] ],
+                div [inline] [
+                    h3 [] [text "Select Level:"],
+                    input [ type' "radio", checked (model.prof == 2) , on "change" targetChecked (\_ -> Signal.message address (Prof 2))] []  , text " Easy" , br [] []  ,
+                    input [ type' "radio", checked (model.prof == 4), on "change" targetChecked (\_ -> Signal.message address (Prof 4))] []  , text " Medium" , br [] []  ,
+                    input [ type' "radio", checked (model.prof == 5), on "change" targetChecked (\_ -> Signal.message address (Prof 5))] []  , text " Hard" , br [] []  ]]
+
+getPlayButton : Signal.Address Action -> Html
+getPlayButton address = 
+    div [style [("margin", "0 auto"),("width","250px")]] 
+    [
+        img [src "img/playbutton.png",Html.Attributes.width 250,onClick address Start,style [("margin-top","20px")]] []
+    ]
+
+
 getViewStart : Signal.Address Action -> Model -> Html
 getViewStart address model = 
         if (model.ai == Nothing)
             then
                 
-                div [center]
-                    [   
-                        img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
-                        h3 [] [text "Select Mode: "],
-                        input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
-                        input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
-                        input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] [],
-                        img [src "img/playbutton.png",Html.Attributes.width 250,onClick address Start,marginUp] []]
+                div [center] 
+                [   
+                    getImageLogo,
+                    getModeSelect address model,
+                    getPlayButton address
+                ]  
             else
                 div [center]
-                    [ 
-                    div [] [  
-                        img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
-                        h3 [] [text "Select Mode: "],
-                        input [ type' "radio", checked (model.ai == Nothing) , on "change" targetChecked (\_ -> Signal.message address (AI Nothing))] []  , text " 2 Players" , br [] [] ,
-                        input [ type' "radio", checked (model.ai == Just Black), on "change" targetChecked (\_ -> Signal.message address (AI (Just Black)))] []  , text " vs CPU - CPU moves first" , br [] [] ,
-                        input [ type' "radio", checked (model.ai == Just White), on "change" targetChecked (\_ -> Signal.message address (AI (Just White)))] []  , text " vs CPU - Human moves first" , br [] [] ],
-                    div [] [
-                        h3 [] [text "Select Level:"],
-                        input [ type' "radio", checked (model.prof == 2) , on "change" targetChecked (\_ -> Signal.message address (Prof 2))] []  , text " Easy" , br [] []  ,
-                        input [ type' "radio", checked (model.prof == 4), on "change" targetChecked (\_ -> Signal.message address (Prof 4))] []  , text " Medium" , br [] []  ,
-                        input [ type' "radio", checked (model.prof == 5), on "change" targetChecked (\_ -> Signal.message address (Prof 5))] []  , text " Hard" , br [] []  ],
-                        img [src "img/playbutton.png",Html.Attributes.width 250,onClick address Start,marginUp] []]
+                [ 
+                    getImageLogo,
+                    getLevelSelect address model,
+                    getPlayButton address
+                ]
 
 getFigure : Maybe Turn -> Svg.Svg
 getFigure t =
     case  t of
-        Nothing -> Svg.circle [cx "40",cy "40",r "35", fill "White"] []
-        Just Black -> Svg.circle [cx "40",cy "40",r "35", fill "Red"] []
-        Just White -> Svg.circle [cx "40",cy "40",r "35", fill "Blue"] []
+        Nothing -> Svg.circle [cx "35",cy "35",r "33", fill "White"] []
+        Just Black -> Svg.circle [cx "35",cy "35",r "33", fill "Red"] []
+        Just White -> Svg.circle [cx "35",cy "35",r "33", fill "Blue"] []
 
 getSvg : Board -> Int -> Int -> Html
-getSvg b r c = Svg.svg [Svg.Attributes.width "75",Svg.Attributes.height "75"] [getFigure (getM b r c)]
+getSvg b r c = Svg.svg [Svg.Attributes.width "70",Svg.Attributes.height "70"] [getFigure (getM b r c)]
+
+
+getViewBoard : Signal.Address Action -> Model -> Bool -> Html
+getViewBoard address model click = 
+    if (click)
+        then
+            table [style [("margin","0 auto")]] [
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
+                tr [tableBorder] [
+                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
+                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
+                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
+                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
+                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
+                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
+                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]
+            else
+                table [style [("margin","0 auto")]] [
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 6],
+                    td [tableBorder] [getSvg model.board 2 6],
+                    td [tableBorder] [getSvg model.board 3 6],
+                    td [tableBorder] [getSvg model.board 4 6],
+                    td [tableBorder] [getSvg model.board 5 6],
+                    td [tableBorder] [getSvg model.board 6 6],
+                    td [tableBorder] [getSvg model.board 7 6]],
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 5],
+                    td [tableBorder] [getSvg model.board 2 5],
+                    td [tableBorder] [getSvg model.board 3 5],
+                    td [tableBorder] [getSvg model.board 4 5],
+                    td [tableBorder] [getSvg model.board 5 5],
+                    td [tableBorder] [getSvg model.board 6 5],
+                    td [tableBorder] [getSvg model.board 7 5]],
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 4],
+                    td [tableBorder] [getSvg model.board 2 4],
+                    td [tableBorder] [getSvg model.board 3 4],
+                    td [tableBorder] [getSvg model.board 4 4],
+                    td [tableBorder] [getSvg model.board 5 4],
+                    td [tableBorder] [getSvg model.board 6 4],
+                    td [tableBorder] [getSvg model.board 7 4]],
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 3],
+                    td [tableBorder] [getSvg model.board 2 3],
+                    td [tableBorder] [getSvg model.board 3 3],
+                    td [tableBorder] [getSvg model.board 4 3],
+                    td [tableBorder] [getSvg model.board 5 3],
+                    td [tableBorder] [getSvg model.board 6 3],
+                    td [tableBorder] [getSvg model.board 7 3]],
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 2],
+                    td [tableBorder] [getSvg model.board 2 2],
+                    td [tableBorder] [getSvg model.board 3 2],
+                    td [tableBorder] [getSvg model.board 4 2],
+                    td [tableBorder] [getSvg model.board 5 2],
+                    td [tableBorder] [getSvg model.board 6 2],
+                    td [tableBorder] [getSvg model.board 7 2]],
+                tr [tableBorder] [
+                    td [tableBorder] [getSvg model.board 1 1],
+                    td [tableBorder] [getSvg model.board 2 1],
+                    td [tableBorder] [getSvg model.board 3 1],
+                    td [tableBorder] [getSvg model.board 4 1],
+                    td [tableBorder] [getSvg model.board 5 1],
+                    td [tableBorder] [getSvg model.board 6 1],
+                    td [tableBorder] [getSvg model.board 7 1]]]
 
 
 getViewInGameHuman : Signal.Address Action -> Model -> Html
 getViewInGameHuman address model = 
         div [center]
             [ 
-            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
+            getImageLogo,
             h3 [] [text ("Turn: " ++ getStringTurn model model.turn)],
-            table [] [
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]]
+            getViewBoard address model True
+            ]
 
 getViewInGameCPU : Signal.Address Action -> Model -> Html
 getViewInGameCPU address model = 
-    let info = ai model
-    in
-            div [center] [ 
-            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
-            h3 [] [text (getStringTurn model model.turn ++ " thinking...")],
-                            div [] [button [onClick address (Move info.bestMove),mediumButton] [ text "Move!"]],
-            table [] [
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]]
+        div [center] 
+        [ 
+                getImageLogo,
+                h3 [] [text ("Turn: " ++ getStringTurn model model.turn)],
+                getViewBoard address model False,
+                div [style [("margin", "0 auto"),("width","250px")]] 
+                [
+                    img [src "img/next.png",Html.Attributes.width 250,onClick address MoveCPU,style [("margin-top","20px")]] []
+                ]
+         ]
+            
 
 getStringStatus : Model -> String
 getStringStatus m = 
@@ -638,60 +686,17 @@ getViewWonTied : Signal.Address Action -> Model -> Html
 getViewWonTied address model = 
         let s = getStringStatus model
         in
-        div [center]
+            div [center]
             [ 
-            img [src "img/logo.png",Html.Attributes.width 600,marginUp] [],
-            div [] [h3 [] [text s]],
-            div [] [button [onClick address (Replay),mediumButton] [ text "Replay" ]],
-            table [] [
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 6],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 6],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 6],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 6],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 6],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 6],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 6]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 5],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 5],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 5],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 5],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 5],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 5],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 5]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 4],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 4],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 4],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 4],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 4],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 4],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 4]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 3],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 3],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 3],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 3],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 3],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 3],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 3]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 2],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 2],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 2],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 2],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 2],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 2],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 2]],
-                tr [tableBorder] [
-                    td [tableBorder,onClick address (Move 1)] [getSvg model.board 1 1],
-                    td [tableBorder,onClick address (Move 2)] [getSvg model.board 2 1],
-                    td [tableBorder,onClick address (Move 3)] [getSvg model.board 3 1],
-                    td [tableBorder,onClick address (Move 4)] [getSvg model.board 4 1],
-                    td [tableBorder,onClick address (Move 5)] [getSvg model.board 5 1],
-                    td [tableBorder,onClick address (Move 6)] [getSvg model.board 6 1],
-                    td [tableBorder,onClick address (Move 7)] [getSvg model.board 7 1]]]] 
+                getImageLogo,
+                div [] [h3 [] [text s]],
+                getViewBoard address model False,
+                div [style [("margin", "0 auto"),("width","100px")]] 
+                [
+                    img [src "img/replay.png",Html.Attributes.width 100,onClick address Replay,style [("margin-top","20px")]] []
+                ]
+                
+            ] 
 
 -- main
 
