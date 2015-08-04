@@ -2,83 +2,26 @@
 Contains Model, Update, View
 -}
 
+--Elm Core and Packages
 import Html exposing (..)
 import Html.Attributes exposing (style,type',checked,src)
 import Html.Events exposing (onClick,targetChecked,on)
 import StartApp
 import Svg exposing (svg,circle)
-import Svg.Attributes exposing (cx,fill,cy,r)
+import Svg.Attributes exposing (cx,fill,cy,r,stroke)
 import Debug
-import Window exposing (..)
-import Time exposing (delay,second)
+
+--Files .elm
+import API exposing (..)
+import Styles exposing (..)
 
 
---API
+{-
 
-just : a -> Maybe a
-just a = (Just a)
+Artificial Intelligence - Minimax algorithm.
+--------------------------------------------
 
-unJust : Maybe a -> a
-unJust (Just a ) = a
-
-type GTree a = Node a (List (GTree a))
-
-type alias Matrix a = List (List a)
-
-bottom = bottom
-
-getL : List a -> Int -> a
-getL l n = 
-    case l of
-        [] -> bottom
-        x::xs -> if (n == 1) then x else getL xs (n-1) 
-
---return first appearence
-getLIndex : List a -> a -> Int
-getLIndex l elem = getLIndexR l elem 1
-
-getLIndexR : List a -> a -> Int -> Int
-getLIndexR l elem pos = 
-    case l of
-        [] -> bottom
-        x::xs -> if (x == elem) then pos else getLIndexR xs elem (pos+1)
-
-containsL : List a -> a -> Bool
-containsL l elem =
-    case l of
-        [] -> False
-        x::xs -> if (x == elem) then True else containsL xs elem
-
-putLFirst : List a -> a -> a -> List a
-putLFirst l first elem = 
-    case l of
-        [] -> []
-        x::xs -> if (x == first) then elem :: xs else x :: (putLFirst xs first elem)
-
-putL : List a -> a -> Int -> List a
-putL l a n = 
-    case l of
-        [] -> []
-        x::xs -> if (n == 1) then (a :: xs) else x :: putL xs a (n-1)
-
-
-getM : Matrix a -> Int -> Int -> a
-getM m r c = getL (getL m r) c
-
-putM : Matrix a -> Int -> Int -> a -> Matrix a
-putM m r c elem = 
-    case m of
-        [] -> bottom
-        x::xs -> if (r == 1) then (putL x elem c) :: xs else x :: putM xs (r-1) c elem 
-
-
-emptyMatrix : Int -> Int -> a -> (Matrix a)
-emptyMatrix row col elem = List.repeat row (List.repeat col elem)
-
---AI
-
-inf : Int
-inf = 1000
+-}
 
 type alias Info =
     {
@@ -87,14 +30,18 @@ type alias Info =
     heuristic : Int
     }
 
-initInfo : Int -> Int -> Int -> Info
-initInfo heuristicParam moveParam bestMoveParam = { move = moveParam , heuristic = heuristicParam, bestMove = bestMoveParam }
-
 type alias State = 
     {
     model : Model,
     info : Info
     }
+
+type GTree a = Node a (List (GTree a))
+
+initInfo : Int -> Int -> Int -> Info
+initInfo heuristicParam moveParam bestMoveParam = { move = moveParam , heuristic = heuristicParam, bestMove = bestMoveParam }
+
+
 
 ai : Model -> Info
 ai model = minimax (generateState 0 model) model.prof
@@ -115,8 +62,6 @@ getStates s = List.map (\pilar -> generateState pilar (makeMove s.model pilar)) 
 
 minimax : State -> Int -> Info
 minimax s p = (getHead (minimaxR p (generateTree p s))).info
---minimax s p = (getHead (minimaxR p (Debug.watch "Tree" (generateTree p s)))).info
-
 
 minimaxR : Int -> GTree State -> GTree State
 minimaxR p (Node s l) = 
@@ -135,20 +80,6 @@ minimaxR p (Node s l) =
                         --getMin ( Debug.watch "ListMin" (List.map (minimaxR (p-1)) l)) s.info.move
     in Node { s | info <- i} l
 
-getHeuristic : State -> Int
-getHeuristic s = getH1 s
-
---getMax : List (GTree State) -> Int -> Info
---getMax l m = 
---    case l of
---        [] -> initInfo ((-1) * (inf+1)) 1
---        x::xs -> let max = getMax xs m in if ((getHead x).info.heuristic >= max.heuristic) then initInfo (getHead x).info.heuristic m  else max
-
---getMin : List (GTree State) -> Int -> Info
---getMin l m = 
---    case l of
---        [] -> initInfo (inf+1) 1
---        x::xs -> let min = getMin xs m in if ((getHead x).info.heuristic <= min.heuristic) then initInfo (getHead x).info.heuristic m  else min
 
 getMax : State -> List (GTree State) ->  Info
 getMax s l  = 
@@ -166,45 +97,71 @@ getMin s l =
 getHead : GTree State -> State
 getHead (Node s l) = s
 
---HEURISTICS
+{-
+
+Heuristics - Quantitative value of a board for Minimax Algrithm.
+----------------------------------------------------------------
+
+-}
+
+
+getHeuristic : State -> Int
+getHeuristic s = 
+    let h = getH1 s
+    in
+        if (s.model.turn /= unJust s.model.ai)
+            then h
+            else (-1)*h
 
 
 --only checks wins
-
 getH1 : State -> Int 
-getH1 s = if (s.model.status == Won)
-            then if (s.model.turn /= unJust s.model.ai)
-                then inf
-                --Sometimes it gets here, sometimes not
-                else (-1*inf)
-            else let h = getH2 s
-                 in
-                    if (s.model.turn /= unJust s.model.ai)
-                        then h
-                        else (-1*h)
+getH1 s = 
+    if (s.model.status == Won)
+        then inf
+        else Debug.watch "Hs" ((getH2 s) + (getH3 s))
 
--- checks lines of 3 
+
 getH2 : State -> Int
-getH2 s = 
-    let index = getLIndex (getL s.model.board s.info.move) (just s.model.turn)
-    in
-        let aux = List.foldr (\b c -> if b then c + 10 else c) 0 (List.map followPath [
-                                (s.model.board,s.model.turn,s.info.move, index, 1,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 2,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 3,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 4,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 5,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 6,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 7,3),
-                                (s.model.board,s.model.turn,s.info.move, index, 8,3)
+getH2 s = List.foldr (\pilar count -> count + (getPilarValue (pilar) * (countElem (getL s.model.board pilar) (just (updateTurn s.model.turn))-countElem (getL s.model.board pilar) (just s.model.turn)))) 0 [1,2,3,4,5,6,7]
+
+getH3 : State -> Int
+getH3 s = List.foldr (\pilar count -> count + (getPilarLines pilar s.model 3)) 0 [1,2,3,4,5,6,7]
+
+getPilarLines : Int -> Model -> Int -> Int
+getPilarLines pilar model line = List.foldr (\index count -> if (getM model.board pilar index == just (updateTurn model.turn)) then count + countLines model pilar index line else count) 0 [1,2,3,4,5,6]
+
+getPilarValue : Int -> Int
+getPilarValue p =
+    case p of
+        1 -> 10
+        2 -> 20
+        3 -> 30
+        4 -> 40
+        5 -> 30
+        6 -> 20
+        7 -> 10
+
+countLines : Model -> Int -> Int -> Int -> Int
+countLines model pilar index c = List.foldr (\b c -> if b then c + 10 else c) 0 (List.map followPath 
+                            [
+                                (model.board,model.turn,pilar, index, 1,c),
+                                (model.board,model.turn,pilar, index, 2,c),
+                                (model.board,model.turn,pilar, index, 3,c),
+                                (model.board,model.turn,pilar, index, 4,c),
+                                (model.board,model.turn,pilar, index, 5,c),
+                                (model.board,model.turn,pilar, index, 6,c),
+                                (model.board,model.turn,pilar, index, 7,c),
+                                (model.board,model.turn,pilar, index, 8,c)
                             ])
-        in 
-            if (s.info.move == 4)
-                then aux + 100
-                else aux
 
 
--- MODEL
+{-
+
+Model - Representation of the game. 
+-----------------------------------
+
+-}
 
 type Coin = Black | White
 
@@ -224,23 +181,11 @@ type alias Model =
     prof : Int
     }
 
--- ai (artificial intelligence) can be: Nothing (2 human players, no CPU) or Just c (CPU moves c)
-
 init : Model
-init = { board = getEmptyBoard , turn = Black , status = Starting, coins = 0, ai = Nothing, prof = 4}
+init = { board = getEmptyBoard , turn = Black , status = Starting, coins = 0, ai = Nothing, prof = 3}
 
 
-{-6x7 board:
-    xxxxxxx
-    xxxxxxx
-    xxxxxxx
-    xxxxxxx
-    xxxxxxx
-    xxxxxxx
-    
- For this model is easier 7x6 (each row is a pilar of the board)
--}
-
+--For the board, each List of the Matrix is one pilar of the board.
 getEmptyBoard : Board
 getEmptyBoard = emptyMatrix 7 6 Nothing
 
@@ -270,7 +215,12 @@ getStringTurn m t =
                 else "Human"
 
 
--- UPDATE
+{-
+
+Update - Represents all interactions (actions) with the model .
+--------------------------------------------------------------
+
+-}
 
 type Action = Move Int | Start | Replay | Prof Int | AI (Maybe Turn) | MoveCPU
 
@@ -309,14 +259,15 @@ makeMove model pilar =
 updateTurn : Turn -> Turn
 updateTurn t = if (t==Black) then White else Black
 
+
 updateBoard : Board -> Turn -> Int -> Int -> Board
 updateBoard b t pilar index = putM b pilar index (Just t)
+
 
 isFull : List (Maybe Coin) -> Bool
 isFull l = not (containsL l Nothing)
 
 
---TODO Analizar que pasa si pongo en el medio...
 analyzeState : Board -> Turn -> Int -> Int -> Bool
 analyzeState b t pilar index = containsL (List.map followPath   [(b,t,pilar,index,1,4),
                                                                  (b,t,pilar,index,2,4),
@@ -394,75 +345,12 @@ tiedGame : Int -> Bool
 tiedGame n = (n == (7*6))
 
 
--- VIEW
+{-
 
-inline : Attribute
-inline =
-  style
-    [ ("display", "inline-block"),
-      ("width","300px")
-      --("margin-left","20px"),
-      --("margin-right","20px"),
-      --("text-align","center")
-    ]
+View - Html depending on Model's status.
+----------------------------------------
 
-
-width : Int
-width = 750
-
-center : Attribute
-center = 
-    style
-        [
-        ("margin","0 auto"),
-        ("width", toString width ++ "px")      
-        ]
-
-
-
-bigButton : Attribute
-bigButton = 
-    style
-        [
-        ("width","200px"),
-        ("height","200px"),
-        ("margin-top","10px")
-        ]
-
-mediumButton : Attribute
-mediumButton = 
-    style
-        [
-        ("width","400px"),
-        ("height","50px")
-        ]
-
-smallButton : Attribute
-smallButton = 
-    style
-        [
-        ("backgroundColor","grey")
-        ]
-
-tableSize : Attribute
-tableSize = 
-    style
-        [
-        ("width","1000px"),
-        ("height","200px")
-        
-        ]
-
-tableBorder : Attribute
-tableBorder =
-    style
-        [
-        ("border","1px solid black")
-        ]
-
-
-
--- The idea is to manage AI reponse through the view simulating a "virtual player"
+-}
 
 view : Signal.Address Action -> Model -> Html
 view address model = 
@@ -476,16 +364,15 @@ view address model =
                 else 
                     getViewInGameHuman address model
         _ -> getViewWonTied address model
-marginUp : Attribute
-marginUp =
-    style
-        [
-        ("margin","25px")
-        ]
+
      
 
 getImageLogo : Html
-getImageLogo = img [src "img/logo.png",Html.Attributes.width (width-50),marginUp] []
+getImageLogo = 
+    div [style [("margin","0 auto"),("width","500px")]]
+    [
+        img [src "img/logo.png",Html.Attributes.width (500),marginUp] []
+    ]
 
 getModeSelect : Signal.Address Action -> Model -> Html
 getModeSelect address model = 
@@ -506,9 +393,8 @@ getLevelSelect address model =
                 div [inline] [
                     h3 [] [text "Select Level:"],
                     input [ type' "radio", checked (model.prof == 2) , on "change" targetChecked (\_ -> Signal.message address (Prof 2))] []  , text " Easy" , br [] []  ,
-                    input [ type' "radio", checked (model.prof == 4), on "change" targetChecked (\_ -> Signal.message address (Prof 4))] []  , text " Medium" , br [] []  ,
-                    input [ type' "radio", checked (model.prof == 5), on "change" targetChecked (\_ -> Signal.message address (Prof 5))] []  , text " Hard" , br [] []  ]]
-
+                    input [ type' "radio", checked (model.prof == 3), on "change" targetChecked (\_ -> Signal.message address (Prof 3))] []  , text " Medium" , br [] []  ,
+                    input [ type' "radio", checked (model.prof == 4), on "change" targetChecked (\_ -> Signal.message address (Prof 4))] []  , text " Hard" , br [] []  ]]
 getPlayButton : Signal.Address Action -> Html
 getPlayButton address = 
     div [style [("margin", "0 auto"),("width","250px")]] 
@@ -536,15 +422,24 @@ getViewStart address model =
                     getPlayButton address
                 ]
 
+cAttributes : String
+cAttributes = toString 27
+
+svgAttributes : String
+svgAttributes = toString 54
+
+rAttributes : String
+rAttributes = toString 26
+
 getFigure : Maybe Turn -> Svg.Svg
 getFigure t =
     case  t of
-        Nothing -> Svg.circle [cx "35",cy "35",r "33", fill "White"] []
-        Just Black -> Svg.circle [cx "35",cy "35",r "33", fill "Red"] []
-        Just White -> Svg.circle [cx "35",cy "35",r "33", fill "Blue"] []
+        Nothing -> Svg.circle [cx cAttributes,cy cAttributes,r rAttributes, fill "White"] []
+        Just Black -> Svg.circle [cx cAttributes,cy cAttributes,r rAttributes, fill "Red", stroke "Black"] []
+        Just White -> Svg.circle [cx cAttributes,cy cAttributes,r rAttributes, fill "Blue", stroke "Black"] []
 
 getSvg : Board -> Int -> Int -> Html
-getSvg b r c = Svg.svg [Svg.Attributes.width "70",Svg.Attributes.height "70"] [getFigure (getM b r c)]
+getSvg b r c = Svg.svg [Svg.Attributes.width svgAttributes,Svg.Attributes.height svgAttributes] [getFigure (getM b r c)]
 
 
 getViewBoard : Signal.Address Action -> Model -> Bool -> Html
@@ -657,8 +552,12 @@ getViewInGameHuman address model =
         div [center]
             [ 
             getImageLogo,
-            h3 [] [text ("Turn: " ++ getStringTurn model model.turn)],
-            getViewBoard address model True
+            h3 [Html.Attributes.align "center",style [("margin","0")]] [text ("Turn: " ++ getStringTurn model model.turn)],
+            getViewBoard address model True,
+            div [style [("margin", "0 auto"),("width","250px")]] 
+                [
+                    h4 [Html.Attributes.align "center"] [text "Click a column to make move..."]
+                ]
             ]
 
 getViewInGameCPU : Signal.Address Action -> Model -> Html
@@ -666,11 +565,12 @@ getViewInGameCPU address model =
         div [center] 
         [ 
                 getImageLogo,
-                h3 [] [text ("Turn: " ++ getStringTurn model model.turn)],
+                h3 [Html.Attributes.align "center",style [("margin","0")]] [text ("Turn: " ++ getStringTurn model model.turn)],
                 getViewBoard address model False,
-                div [style [("margin", "0 auto"),("width","250px")]] 
+                div [style [("margin", "0 auto"),("width","150px")]] 
                 [
-                    img [src "img/next.png",Html.Attributes.width 250,onClick address MoveCPU,style [("margin-top","20px")]] []
+                    img [src "img/next.png",Html.Attributes.width 150,onClick address MoveCPU,style [("margin-top","20px")]] [],
+                    h4 [Html.Attributes.align "center",style [("margin-top","0")]] [text "Click ONCE and wait..."]
                 ]
          ]
             
@@ -689,7 +589,7 @@ getViewWonTied address model =
             div [center]
             [ 
                 getImageLogo,
-                div [] [h3 [] [text s]],
+                div [] [h3 [Html.Attributes.align "center",style [("margin","0")]] [text s]],
                 getViewBoard address model False,
                 div [style [("margin", "0 auto"),("width","100px")]] 
                 [
@@ -698,6 +598,6 @@ getViewWonTied address model =
                 
             ] 
 
--- main
+-- Main
 
 main = StartApp.start {model = init, update = update, view = view}

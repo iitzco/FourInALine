@@ -1,0 +1,106 @@
+Elm.Heuristics = Elm.Heuristics || {};
+Elm.Heuristics.make = function (_elm) {
+   "use strict";
+   _elm.Heuristics = _elm.Heuristics || {};
+   if (_elm.Heuristics.values)
+   return _elm.Heuristics.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Heuristics",
+   $API = Elm.API.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Defs = Elm.Defs.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var getH2 = function (s) {
+      return function () {
+         var index = A2($API.getLIndex,
+         A2($API.getL,
+         s.model.board,
+         s.info.move),
+         $API.just(s.model.turn));
+         var aux = A3($List.foldr,
+         F2(function (b,c) {
+            return b ? c + 10 : c;
+         }),
+         0,
+         A2($List.map,
+         $API.followPath,
+         _L.fromArray([{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 1
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 2
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 3
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 4
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 5
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 6
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 7
+                       ,_5: 3}
+                      ,{ctor: "_Tuple6"
+                       ,_0: s.model.board
+                       ,_1: s.model.turn
+                       ,_2: s.info.move
+                       ,_3: index
+                       ,_4: 8
+                       ,_5: 3}])));
+         return _U.eq(s.info.move,
+         4) ? aux + 100 : aux;
+      }();
+   };
+   var getH1 = function (s) {
+      return _U.eq(s.model.status,
+      $Defs.Won) ? !_U.eq(s.model.turn,
+      $API.unJust(s.model.ai)) ? $Defs.inf : -1 * $Defs.inf : function () {
+         var h = getH2(s);
+         return !_U.eq(s.model.turn,
+         $API.unJust(s.model.ai)) ? h : -1 * h;
+      }();
+   };
+   _elm.Heuristics.values = {_op: _op
+                            ,getH1: getH1
+                            ,getH2: getH2};
+   return _elm.Heuristics.values;
+};

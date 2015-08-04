@@ -1,4 +1,166 @@
 var Elm = Elm || { Native: {} };
+Elm.API = Elm.API || {};
+Elm.API.make = function (_elm) {
+   "use strict";
+   _elm.API = _elm.API || {};
+   if (_elm.API.values)
+   return _elm.API.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "API",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var inf = 1000;
+   var emptyMatrix = F3(function (row,
+   col,
+   elem) {
+      return A2($List.repeat,
+      row,
+      A2($List.repeat,col,elem));
+   });
+   var countElem = F2(function (l,
+   elem) {
+      return A3($List.foldr,
+      F2(function (x,c) {
+         return _U.eq(x,
+         elem) ? c + 1 : c;
+      }),
+      0,
+      l);
+   });
+   var putL = F3(function (l,a,n) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(n,
+              1) ? A2($List._op["::"],
+              a,
+              l._1) : A2($List._op["::"],
+              l._0,
+              A3(putL,l._1,a,n - 1));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 47 and 49");
+      }();
+   });
+   var putLFirst = F3(function (l,
+   first,
+   elem) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              first) ? A2($List._op["::"],
+              elem,
+              l._1) : A2($List._op["::"],
+              l._0,
+              A3(putLFirst,l._1,first,elem));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 41 and 43");
+      }();
+   });
+   var containsL = F2(function (l,
+   elem) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              elem) ? true : A2(containsL,
+              l._1,
+              elem);
+            case "[]": return false;}
+         _U.badCase($moduleName,
+         "between lines 35 and 37");
+      }();
+   });
+   var bottom = bottom;
+   var getL = F2(function (l,n) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(n,
+              1) ? l._0 : A2(getL,l._1,n - 1);
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 19 and 21");
+      }();
+   });
+   var getM = F3(function (m,r,c) {
+      return A2(getL,
+      A2(getL,m,r),
+      c);
+   });
+   var getLIndexR = F3(function (l,
+   elem,
+   pos) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              elem) ? pos : A3(getLIndexR,
+              l._1,
+              elem,
+              pos + 1);
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 29 and 31");
+      }();
+   });
+   var getLIndex = F2(function (l,
+   elem) {
+      return A3(getLIndexR,
+      l,
+      elem,
+      1);
+   });
+   var putM = F4(function (m,
+   r,
+   c,
+   elem) {
+      return function () {
+         switch (m.ctor)
+         {case "::": return _U.eq(r,
+              1) ? A2($List._op["::"],
+              A3(putL,m._0,elem,c),
+              m._1) : A2($List._op["::"],
+              m._0,
+              A4(putM,m._1,r - 1,c,elem));
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 60 and 62");
+      }();
+   });
+   var unJust = function (_v18) {
+      return function () {
+         switch (_v18.ctor)
+         {case "Just": return _v18._0;}
+         _U.badCase($moduleName,
+         "on line 11, column 20 to 21");
+      }();
+   };
+   var just = function (a) {
+      return $Maybe.Just(a);
+   };
+   _elm.API.values = {_op: _op
+                     ,just: just
+                     ,unJust: unJust
+                     ,bottom: bottom
+                     ,getL: getL
+                     ,getLIndex: getLIndex
+                     ,getLIndexR: getLIndexR
+                     ,containsL: containsL
+                     ,putLFirst: putLFirst
+                     ,putL: putL
+                     ,countElem: countElem
+                     ,getM: getM
+                     ,putM: putM
+                     ,emptyMatrix: emptyMatrix
+                     ,inf: inf};
+   return _elm.API.values;
+};
 Elm.Array = Elm.Array || {};
 Elm.Array.make = function (_elm) {
    "use strict";
@@ -4165,6 +4327,7 @@ Elm.Main.make = function (_elm) {
    _U = _N.Utils.make(_elm),
    _L = _N.List.make(_elm),
    $moduleName = "Main",
+   $API = Elm.API.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
@@ -4175,542 +4338,70 @@ Elm.Main.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
+   $Styles = Elm.Styles.make(_elm),
    $Svg = Elm.Svg.make(_elm),
    $Svg$Attributes = Elm.Svg.Attributes.make(_elm);
+   var rAttributes = $Basics.toString(26);
+   var svgAttributes = $Basics.toString(54);
+   var cAttributes = $Basics.toString(27);
    var getFigure = function (t) {
       return function () {
          switch (t.ctor)
          {case "Just": switch (t._0.ctor)
               {case "Black":
                  return A2($Svg.circle,
-                   _L.fromArray([$Svg$Attributes.cx("35")
-                                ,$Svg$Attributes.cy("35")
-                                ,$Svg$Attributes.r("33")
-                                ,$Svg$Attributes.fill("Red")]),
+                   _L.fromArray([$Svg$Attributes.cx(cAttributes)
+                                ,$Svg$Attributes.cy(cAttributes)
+                                ,$Svg$Attributes.r(rAttributes)
+                                ,$Svg$Attributes.fill("Red")
+                                ,$Svg$Attributes.stroke("Black")]),
                    _L.fromArray([]));
                  case "White":
                  return A2($Svg.circle,
-                   _L.fromArray([$Svg$Attributes.cx("35")
-                                ,$Svg$Attributes.cy("35")
-                                ,$Svg$Attributes.r("33")
-                                ,$Svg$Attributes.fill("Blue")]),
+                   _L.fromArray([$Svg$Attributes.cx(cAttributes)
+                                ,$Svg$Attributes.cy(cAttributes)
+                                ,$Svg$Attributes.r(rAttributes)
+                                ,$Svg$Attributes.fill("Blue")
+                                ,$Svg$Attributes.stroke("Black")]),
                    _L.fromArray([]));}
               break;
             case "Nothing":
             return A2($Svg.circle,
-              _L.fromArray([$Svg$Attributes.cx("35")
-                           ,$Svg$Attributes.cy("35")
-                           ,$Svg$Attributes.r("33")
+              _L.fromArray([$Svg$Attributes.cx(cAttributes)
+                           ,$Svg$Attributes.cy(cAttributes)
+                           ,$Svg$Attributes.r(rAttributes)
                            ,$Svg$Attributes.fill("White")]),
               _L.fromArray([]));}
          _U.badCase($moduleName,
-         "between lines 541 and 544");
+         "between lines 436 and 439");
       }();
    };
-   var marginUp = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                       ,_0: "margin"
-                                                       ,_1: "25px"}]));
-   var tableBorder = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                          ,_0: "border"
-                                                          ,_1: "1px solid black"}]));
-   var tableSize = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                        ,_0: "width"
-                                                        ,_1: "1000px"}
-                                                       ,{ctor: "_Tuple2"
-                                                        ,_0: "height"
-                                                        ,_1: "200px"}]));
-   var smallButton = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                          ,_0: "backgroundColor"
-                                                          ,_1: "grey"}]));
-   var mediumButton = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                           ,_0: "width"
-                                                           ,_1: "400px"}
-                                                          ,{ctor: "_Tuple2"
-                                                           ,_0: "height"
-                                                           ,_1: "50px"}]));
-   var bigButton = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                        ,_0: "width"
-                                                        ,_1: "200px"}
-                                                       ,{ctor: "_Tuple2"
-                                                        ,_0: "height"
-                                                        ,_1: "200px"}
-                                                       ,{ctor: "_Tuple2"
-                                                        ,_0: "margin-top"
-                                                        ,_1: "10px"}]));
-   var width = 750;
-   var center = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                     ,_0: "margin"
-                                                     ,_1: "0 auto"}
-                                                    ,{ctor: "_Tuple2"
-                                                     ,_0: "width"
-                                                     ,_1: A2($Basics._op["++"],
-                                                     $Basics.toString(width),
-                                                     "px")}]));
-   var getImageLogo = A2($Html.img,
+   var getSvg = F3(function (b,
+   r,
+   c) {
+      return A2($Svg.svg,
+      _L.fromArray([$Svg$Attributes.width(svgAttributes)
+                   ,$Svg$Attributes.height(svgAttributes)]),
+      _L.fromArray([getFigure(A3($API.getM,
+      b,
+      r,
+      c))]));
+   });
+   var getImageLogo = A2($Html.div,
+   _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                      ,_0: "margin"
+                                                      ,_1: "0 auto"}
+                                                     ,{ctor: "_Tuple2"
+                                                      ,_0: "width"
+                                                      ,_1: "500px"}]))]),
+   _L.fromArray([A2($Html.img,
    _L.fromArray([$Html$Attributes.src("img/logo.png")
-                ,$Html$Attributes.width(width - 50)
-                ,marginUp]),
-   _L.fromArray([]));
-   var inline = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                     ,_0: "display"
-                                                     ,_1: "inline-block"}
-                                                    ,{ctor: "_Tuple2"
-                                                     ,_0: "width"
-                                                     ,_1: "300px"}]));
+                ,$Html$Attributes.width(500)
+                ,$Styles.marginUp]),
+   _L.fromArray([]))]));
    var tiedGame = function (n) {
       return _U.eq(n,7 * 6);
    };
-   var MoveCPU = {ctor: "MoveCPU"};
-   var AI = function (a) {
-      return {ctor: "AI",_0: a};
-   };
-   var Prof = function (a) {
-      return {ctor: "Prof",_0: a};
-   };
-   var Replay = {ctor: "Replay"};
-   var Start = {ctor: "Start"};
-   var getPlayButton = function (address) {
-      return A2($Html.div,
-      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                         ,_0: "margin"
-                                                         ,_1: "0 auto"}
-                                                        ,{ctor: "_Tuple2"
-                                                         ,_0: "width"
-                                                         ,_1: "250px"}]))]),
-      _L.fromArray([A2($Html.img,
-      _L.fromArray([$Html$Attributes.src("img/playbutton.png")
-                   ,$Html$Attributes.width(250)
-                   ,A2($Html$Events.onClick,
-                   address,
-                   Start)
-                   ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                         ,_0: "margin-top"
-                                                         ,_1: "20px"}]))]),
-      _L.fromArray([]))]));
-   };
-   var Move = function (a) {
-      return {ctor: "Move",_0: a};
-   };
-   var formString = function (c) {
-      return function () {
-         switch (c.ctor)
-         {case "Just":
-            return function () {
-                 switch (c._0.ctor)
-                 {case "Black": return "  B  ";
-                    case "White": return "  W  ";}
-                 _U.badCase($moduleName,
-                 "between lines 256 and 258");
-              }();
-            case "Nothing": return "  -  ";}
-         _U.badCase($moduleName,
-         "between lines 254 and 258");
-      }();
-   };
-   var Model = F6(function (a,
-   b,
-   c,
-   d,
-   e,
-   f) {
-      return {_: {}
-             ,ai: e
-             ,board: a
-             ,coins: d
-             ,prof: f
-             ,status: c
-             ,turn: b};
-   });
-   var Tied = {ctor: "Tied"};
-   var Won = {ctor: "Won"};
-   var InGame = {ctor: "InGame"};
-   var Starting = {ctor: "Starting"};
-   var White = {ctor: "White"};
-   var Black = {ctor: "Black"};
-   var updateTurn = function (t) {
-      return _U.eq(t,
-      Black) ? White : Black;
-   };
-   var getModeSelect = F2(function (address,
-   model) {
-      return A2($Html.div,
-      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                         ,_0: "margin-left"
-                                                         ,_1: "100px"}]))]),
-      _L.fromArray([A2($Html.h3,
-                   _L.fromArray([]),
-                   _L.fromArray([$Html.text("Select Mode: ")]))
-                   ,A2($Html.input,
-                   _L.fromArray([$Html$Attributes.type$("radio")
-                                ,$Html$Attributes.checked(_U.eq(model.ai,
-                                $Maybe.Nothing))
-                                ,A3($Html$Events.on,
-                                "change",
-                                $Html$Events.targetChecked,
-                                function (_v5) {
-                                   return function () {
-                                      return A2($Signal.message,
-                                      address,
-                                      AI($Maybe.Nothing));
-                                   }();
-                                })]),
-                   _L.fromArray([]))
-                   ,$Html.text(" 2 Players")
-                   ,A2($Html.br,
-                   _L.fromArray([]),
-                   _L.fromArray([]))
-                   ,A2($Html.input,
-                   _L.fromArray([$Html$Attributes.type$("radio")
-                                ,$Html$Attributes.checked(_U.eq(model.ai,
-                                $Maybe.Just(Black)))
-                                ,A3($Html$Events.on,
-                                "change",
-                                $Html$Events.targetChecked,
-                                function (_v7) {
-                                   return function () {
-                                      return A2($Signal.message,
-                                      address,
-                                      AI($Maybe.Just(Black)));
-                                   }();
-                                })]),
-                   _L.fromArray([]))
-                   ,$Html.text(" vs CPU - CPU moves first")
-                   ,A2($Html.br,
-                   _L.fromArray([]),
-                   _L.fromArray([]))
-                   ,A2($Html.input,
-                   _L.fromArray([$Html$Attributes.type$("radio")
-                                ,$Html$Attributes.checked(_U.eq(model.ai,
-                                $Maybe.Just(White)))
-                                ,A3($Html$Events.on,
-                                "change",
-                                $Html$Events.targetChecked,
-                                function (_v9) {
-                                   return function () {
-                                      return A2($Signal.message,
-                                      address,
-                                      AI($Maybe.Just(White)));
-                                   }();
-                                })]),
-                   _L.fromArray([]))
-                   ,$Html.text(" vs CPU - Human moves first")
-                   ,A2($Html.br,
-                   _L.fromArray([]),
-                   _L.fromArray([]))]));
-   });
-   var getLevelSelect = F2(function (address,
-   model) {
-      return A2($Html.div,
-      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                         ,_0: "margin-left"
-                                                         ,_1: "100px"}]))]),
-      _L.fromArray([A2($Html.div,
-                   _L.fromArray([inline]),
-                   _L.fromArray([A2($Html.h3,
-                                _L.fromArray([]),
-                                _L.fromArray([$Html.text("Select Mode: ")]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.ai,
-                                             $Maybe.Nothing))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v11) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   AI($Maybe.Nothing));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" 2 Players")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.ai,
-                                             $Maybe.Just(Black)))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v13) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   AI($Maybe.Just(Black)));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" vs CPU - CPU moves first")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.ai,
-                                             $Maybe.Just(White)))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v15) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   AI($Maybe.Just(White)));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" vs CPU - Human moves first")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))]))
-                   ,A2($Html.div,
-                   _L.fromArray([inline]),
-                   _L.fromArray([A2($Html.h3,
-                                _L.fromArray([]),
-                                _L.fromArray([$Html.text("Select Level:")]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.prof,
-                                             2))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v17) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   Prof(2));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" Easy")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.prof,
-                                             4))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v19) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   Prof(4));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" Medium")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))
-                                ,A2($Html.input,
-                                _L.fromArray([$Html$Attributes.type$("radio")
-                                             ,$Html$Attributes.checked(_U.eq(model.prof,
-                                             5))
-                                             ,A3($Html$Events.on,
-                                             "change",
-                                             $Html$Events.targetChecked,
-                                             function (_v21) {
-                                                return function () {
-                                                   return A2($Signal.message,
-                                                   address,
-                                                   Prof(5));
-                                                }();
-                                             })]),
-                                _L.fromArray([]))
-                                ,$Html.text(" Hard")
-                                ,A2($Html.br,
-                                _L.fromArray([]),
-                                _L.fromArray([]))]))]));
-   });
-   var getViewStart = F2(function (address,
-   model) {
-      return _U.eq(model.ai,
-      $Maybe.Nothing) ? A2($Html.div,
-      _L.fromArray([center]),
-      _L.fromArray([getImageLogo
-                   ,A2(getModeSelect,address,model)
-                   ,getPlayButton(address)])) : A2($Html.div,
-      _L.fromArray([center]),
-      _L.fromArray([getImageLogo
-                   ,A2(getLevelSelect,
-                   address,
-                   model)
-                   ,getPlayButton(address)]));
-   });
-   var getHead = function (_v23) {
-      return function () {
-         switch (_v23.ctor)
-         {case "Node": return _v23._0;}
-         _U.badCase($moduleName,
-         "on line 167, column 22 to 23");
-      }();
-   };
-   var State = F2(function (a,b) {
-      return {_: {}
-             ,info: b
-             ,model: a};
-   });
-   var initInfo = F3(function (heuristicParam,
-   moveParam,
-   bestMoveParam) {
-      return {_: {}
-             ,bestMove: bestMoveParam
-             ,heuristic: heuristicParam
-             ,move: moveParam};
-   });
-   var generateState = F2(function (moveParam,
-   modelParam) {
-      return {_: {}
-             ,info: A3(initInfo,
-             0,
-             moveParam,
-             0)
-             ,model: modelParam};
-   });
-   var Info = F3(function (a,b,c) {
-      return {_: {}
-             ,bestMove: b
-             ,heuristic: c
-             ,move: a};
-   });
-   var inf = 1000;
-   var getMax = F2(function (s,l) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return function () {
-                 var max = A2(getMax,s,l._1);
-                 return _U.cmp(getHead(l._0).info.heuristic,
-                 max.heuristic) > -1 ? A3(initInfo,
-                 getHead(l._0).info.heuristic,
-                 s.info.move,
-                 getHead(l._0).info.move) : max;
-              }();
-            case "[]": return A3(initInfo,
-              -1 * (inf + 1),
-              0,
-              s.info.move);}
-         _U.badCase($moduleName,
-         "between lines 155 and 157");
-      }();
-   });
-   var getMin = F2(function (s,l) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return function () {
-                 var min = A2(getMin,s,l._1);
-                 return _U.cmp(getHead(l._0).info.heuristic,
-                 min.heuristic) < 1 ? A3(initInfo,
-                 getHead(l._0).info.heuristic,
-                 s.info.move,
-                 getHead(l._0).info.move) : min;
-              }();
-            case "[]": return A3(initInfo,
-              inf + 1,
-              0,
-              s.info.move);}
-         _U.badCase($moduleName,
-         "between lines 161 and 163");
-      }();
-   });
-   var emptyMatrix = F3(function (row,
-   col,
-   elem) {
-      return A2($List.repeat,
-      row,
-      A2($List.repeat,col,elem));
-   });
-   var getEmptyBoard = A3(emptyMatrix,
-   7,
-   6,
-   $Maybe.Nothing);
-   var init = {_: {}
-              ,ai: $Maybe.Nothing
-              ,board: getEmptyBoard
-              ,coins: 0
-              ,prof: 4
-              ,status: Starting
-              ,turn: Black};
-   var putL = F3(function (l,a,n) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return _U.eq(n,
-              1) ? A2($List._op["::"],
-              a,
-              l._1) : A2($List._op["::"],
-              l._0,
-              A3(putL,l._1,a,n - 1));
-            case "[]":
-            return _L.fromArray([]);}
-         _U.badCase($moduleName,
-         "between lines 60 and 62");
-      }();
-   });
-   var putLFirst = F3(function (l,
-   first,
-   elem) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return _U.eq(l._0,
-              first) ? A2($List._op["::"],
-              elem,
-              l._1) : A2($List._op["::"],
-              l._0,
-              A3(putLFirst,l._1,first,elem));
-            case "[]":
-            return _L.fromArray([]);}
-         _U.badCase($moduleName,
-         "between lines 54 and 56");
-      }();
-   });
-   var containsL = F2(function (l,
-   elem) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return _U.eq(l._0,
-              elem) ? true : A2(containsL,
-              l._1,
-              elem);
-            case "[]": return false;}
-         _U.badCase($moduleName,
-         "between lines 48 and 50");
-      }();
-   });
-   var isFull = function (l) {
-      return $Basics.not(A2(containsL,
-      l,
-      $Maybe.Nothing));
-   };
-   var bottom = bottom;
-   var getL = F2(function (l,n) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return _U.eq(n,
-              1) ? l._0 : A2(getL,l._1,n - 1);
-            case "[]": return bottom;}
-         _U.badCase($moduleName,
-         "between lines 32 and 34");
-      }();
-   });
-   var getM = F3(function (m,r,c) {
-      return A2(getL,
-      A2(getL,m,r),
-      c);
-   });
-   var getStringBoard = F3(function (b,
-   row,
-   col) {
-      return formString(A3(getM,
-      b,
-      row,
-      col));
-   });
    var opposite = F5(function (b,
    t,
    pilar,
@@ -4741,7 +4432,7 @@ Elm.Main.make = function (_elm) {
          1) < 0 || (_U.cmp(pilar2,
          7) > 0 || (_U.cmp(index2,
          1) < 0 || (_U.cmp(index2,
-         6) > 0 || !_U.eq(A3(getM,
+         6) > 0 || !_U.eq(A3($API.getM,
          b,
          pilar2,
          index2),
@@ -4780,7 +4471,7 @@ Elm.Main.make = function (_elm) {
          1) < 0 || (_U.cmp(pilar2,
          7) > 0 || (_U.cmp(index2,
          1) < 0 || _U.cmp(index2,
-         6) > 0)) ? false : !_U.eq(A3(getM,
+         6) > 0)) ? false : !_U.eq(A3($API.getM,
          b,
          pilar2,
          index2),
@@ -4800,26 +4491,26 @@ Elm.Main.make = function (_elm) {
          remain2);
       }();
    });
-   var followPath = function (_v49) {
+   var followPath = function (_v6) {
       return function () {
-         switch (_v49.ctor)
+         switch (_v6.ctor)
          {case "_Tuple6":
             return A6(followPathR,
-              _v49._0,
-              _v49._1,
-              _v49._2,
-              _v49._3,
-              _v49._4,
-              _v49._5);}
+              _v6._0,
+              _v6._1,
+              _v6._2,
+              _v6._3,
+              _v6._4,
+              _v6._5);}
          _U.badCase($moduleName,
-         "on line 331, column 42 to 79");
+         "on line 282, column 42 to 79");
       }();
    };
    var analyzeState = F4(function (b,
    t,
    pilar,
    index) {
-      return A2(containsL,
+      return A2($API.containsL,
       A2($List.map,
       followPath,
       _L.fromArray([{ctor: "_Tuple6"
@@ -4880,17 +4571,52 @@ Elm.Main.make = function (_elm) {
                     ,_5: 4}])),
       true);
    });
-   var getSvg = F3(function (b,
-   r,
-   c) {
-      return A2($Svg.svg,
-      _L.fromArray([$Svg$Attributes.width("70")
-                   ,$Svg$Attributes.height("70")]),
-      _L.fromArray([getFigure(A3(getM,
+   var isFull = function (l) {
+      return $Basics.not(A2($API.containsL,
+      l,
+      $Maybe.Nothing));
+   };
+   var updateBoard = F4(function (b,
+   t,
+   pilar,
+   index) {
+      return A4($API.putM,
       b,
-      r,
-      c))]));
+      pilar,
+      index,
+      $Maybe.Just(t));
    });
+   var MoveCPU = {ctor: "MoveCPU"};
+   var AI = function (a) {
+      return {ctor: "AI",_0: a};
+   };
+   var Prof = function (a) {
+      return {ctor: "Prof",_0: a};
+   };
+   var Replay = {ctor: "Replay"};
+   var Start = {ctor: "Start"};
+   var getPlayButton = function (address) {
+      return A2($Html.div,
+      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                         ,_0: "margin"
+                                                         ,_1: "0 auto"}
+                                                        ,{ctor: "_Tuple2"
+                                                         ,_0: "width"
+                                                         ,_1: "250px"}]))]),
+      _L.fromArray([A2($Html.img,
+      _L.fromArray([$Html$Attributes.src("img/playbutton.png")
+                   ,$Html$Attributes.width(250)
+                   ,A2($Html$Events.onClick,
+                   address,
+                   Start)
+                   ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                         ,_0: "margin-top"
+                                                         ,_1: "20px"}]))]),
+      _L.fromArray([]))]));
+   };
+   var Move = function (a) {
+      return {ctor: "Move",_0: a};
+   };
    var getViewBoard = F3(function (address,
    model,
    click) {
@@ -4899,9 +4625,9 @@ Elm.Main.make = function (_elm) {
                                                          ,_0: "margin"
                                                          ,_1: "0 auto"}]))]),
       _L.fromArray([A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -4910,7 +4636,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -4919,7 +4645,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -4928,7 +4654,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -4937,7 +4663,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -4946,7 +4672,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -4955,7 +4681,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -4964,9 +4690,9 @@ Elm.Main.make = function (_elm) {
                                 7,
                                 6)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -4975,7 +4701,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -4984,7 +4710,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -4993,7 +4719,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -5002,7 +4728,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -5011,7 +4737,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -5020,7 +4746,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -5029,9 +4755,9 @@ Elm.Main.make = function (_elm) {
                                 7,
                                 5)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -5040,7 +4766,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -5049,7 +4775,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -5058,7 +4784,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -5067,7 +4793,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -5076,7 +4802,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -5085,7 +4811,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -5094,9 +4820,9 @@ Elm.Main.make = function (_elm) {
                                 7,
                                 4)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -5105,7 +4831,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -5114,7 +4840,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -5123,7 +4849,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -5132,7 +4858,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -5141,7 +4867,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -5150,7 +4876,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -5159,9 +4885,9 @@ Elm.Main.make = function (_elm) {
                                 7,
                                 3)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -5170,7 +4896,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -5179,7 +4905,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -5188,7 +4914,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -5197,7 +4923,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -5206,7 +4932,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -5215,7 +4941,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -5224,9 +4950,9 @@ Elm.Main.make = function (_elm) {
                                 7,
                                 2)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(1))]),
@@ -5235,7 +4961,7 @@ Elm.Main.make = function (_elm) {
                                 1,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(2))]),
@@ -5244,7 +4970,7 @@ Elm.Main.make = function (_elm) {
                                 2,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(3))]),
@@ -5253,7 +4979,7 @@ Elm.Main.make = function (_elm) {
                                 3,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(4))]),
@@ -5262,7 +4988,7 @@ Elm.Main.make = function (_elm) {
                                 4,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(5))]),
@@ -5271,7 +4997,7 @@ Elm.Main.make = function (_elm) {
                                 5,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(6))]),
@@ -5280,7 +5006,7 @@ Elm.Main.make = function (_elm) {
                                 6,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder
+                                _L.fromArray([$Styles.tableBorder
                                              ,A2($Html$Events.onClick,
                                              address,
                                              Move(7))]),
@@ -5292,328 +5018,423 @@ Elm.Main.make = function (_elm) {
                                                          ,_0: "margin"
                                                          ,_1: "0 auto"}]))]),
       _L.fromArray([A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 6)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 6)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 5)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 5)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 4)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 4)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 3)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 3)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 2)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 2)]))]))
                    ,A2($Html.tr,
-                   _L.fromArray([tableBorder]),
+                   _L.fromArray([$Styles.tableBorder]),
                    _L.fromArray([A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 1,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 2,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 3,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 4,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 5,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 6,
                                 1)]))
                                 ,A2($Html.td,
-                                _L.fromArray([tableBorder]),
+                                _L.fromArray([$Styles.tableBorder]),
                                 _L.fromArray([A3(getSvg,
                                 model.board,
                                 7,
                                 1)]))]))]));
    });
-   var getLIndexR = F3(function (l,
-   elem,
-   pos) {
-      return function () {
-         switch (l.ctor)
-         {case "::": return _U.eq(l._0,
-              elem) ? pos : A3(getLIndexR,
-              l._1,
-              elem,
-              pos + 1);
-            case "[]": return bottom;}
+   var getStringTurn = F2(function (m,
+   t) {
+      return _U.eq(m.ai,
+      $Maybe.Nothing) ? function () {
+         switch (t.ctor)
+         {case "Black": return "Red";
+            case "White": return "Blue";}
          _U.badCase($moduleName,
-         "between lines 42 and 44");
-      }();
+         "between lines 209 and 212");
+      }() : _U.eq(m.ai,
+      $API.just(t)) ? "CPU" : "Human";
    });
-   var getLIndex = F2(function (l,
-   elem) {
-      return A3(getLIndexR,
-      l,
-      elem,
-      1);
+   var getViewInGameHuman = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Styles.center]),
+      _L.fromArray([getImageLogo
+                   ,A2($Html.h3,
+                   _L.fromArray([$Html$Attributes.align("center")
+                                ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                      ,_0: "margin"
+                                                                      ,_1: "0"}]))]),
+                   _L.fromArray([$Html.text(A2($Basics._op["++"],
+                   "Turn: ",
+                   A2(getStringTurn,
+                   model,
+                   model.turn)))]))
+                   ,A3(getViewBoard,
+                   address,
+                   model,
+                   true)
+                   ,A2($Html.div,
+                   _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                      ,_0: "margin"
+                                                                      ,_1: "0 auto"}
+                                                                     ,{ctor: "_Tuple2"
+                                                                      ,_0: "width"
+                                                                      ,_1: "250px"}]))]),
+                   _L.fromArray([A2($Html.h4,
+                   _L.fromArray([$Html$Attributes.align("center")]),
+                   _L.fromArray([$Html.text("Click a column to make move...")]))]))]));
    });
-   var putM = F4(function (m,
-   r,
-   c,
-   elem) {
+   var getViewInGameCPU = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Styles.center]),
+      _L.fromArray([getImageLogo
+                   ,A2($Html.h3,
+                   _L.fromArray([$Html$Attributes.align("center")
+                                ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                      ,_0: "margin"
+                                                                      ,_1: "0"}]))]),
+                   _L.fromArray([$Html.text(A2($Basics._op["++"],
+                   "Turn: ",
+                   A2(getStringTurn,
+                   model,
+                   model.turn)))]))
+                   ,A3(getViewBoard,
+                   address,
+                   model,
+                   false)
+                   ,A2($Html.div,
+                   _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                      ,_0: "margin"
+                                                                      ,_1: "0 auto"}
+                                                                     ,{ctor: "_Tuple2"
+                                                                      ,_0: "width"
+                                                                      ,_1: "150px"}]))]),
+                   _L.fromArray([A2($Html.img,
+                                _L.fromArray([$Html$Attributes.src("img/next.png")
+                                             ,$Html$Attributes.width(150)
+                                             ,A2($Html$Events.onClick,
+                                             address,
+                                             MoveCPU)
+                                             ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                   ,_0: "margin-top"
+                                                                                   ,_1: "20px"}]))]),
+                                _L.fromArray([]))
+                                ,A2($Html.h4,
+                                _L.fromArray([$Html$Attributes.align("center")
+                                             ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                                   ,_0: "margin-top"
+                                                                                   ,_1: "0"}]))]),
+                                _L.fromArray([$Html.text("Click ONCE and wait...")]))]))]));
+   });
+   var formString = function (c) {
       return function () {
-         switch (m.ctor)
-         {case "::": return _U.eq(r,
-              1) ? A2($List._op["::"],
-              A3(putL,m._0,elem,c),
-              m._1) : A2($List._op["::"],
-              m._0,
-              A4(putM,m._1,r - 1,c,elem));
-            case "[]": return bottom;}
+         switch (c.ctor)
+         {case "Just":
+            return function () {
+                 switch (c._0.ctor)
+                 {case "Black": return "  B  ";
+                    case "White": return "  W  ";}
+                 _U.badCase($moduleName,
+                 "between lines 201 and 203");
+              }();
+            case "Nothing": return "  -  ";}
          _U.badCase($moduleName,
-         "between lines 70 and 72");
+         "between lines 199 and 203");
       }();
-   });
-   var updateBoard = F4(function (b,
-   t,
-   pilar,
-   index) {
-      return A4(putM,
+   };
+   var getStringBoard = F3(function (b,
+   row,
+   col) {
+      return formString(A3($API.getM,
       b,
-      pilar,
-      index,
-      $Maybe.Just(t));
+      row,
+      col));
    });
+   var getEmptyBoard = A3($API.emptyMatrix,
+   7,
+   6,
+   $Maybe.Nothing);
+   var Model = F6(function (a,
+   b,
+   c,
+   d,
+   e,
+   f) {
+      return {_: {}
+             ,ai: e
+             ,board: a
+             ,coins: d
+             ,prof: f
+             ,status: c
+             ,turn: b};
+   });
+   var Tied = {ctor: "Tied"};
+   var Won = {ctor: "Won"};
+   var InGame = {ctor: "InGame"};
+   var Starting = {ctor: "Starting"};
+   var White = {ctor: "White"};
+   var Black = {ctor: "Black"};
+   var init = {_: {}
+              ,ai: $Maybe.Nothing
+              ,board: getEmptyBoard
+              ,coins: 0
+              ,prof: 3
+              ,status: Starting
+              ,turn: Black};
+   var updateTurn = function (t) {
+      return _U.eq(t,
+      Black) ? White : Black;
+   };
    var makeMove = F2(function (model,
    pilar) {
       return function () {
-         var listPilar = A2(getL,
+         var listPilar = A2($API.getL,
          model.board,
          pilar);
          return isFull(listPilar) ? model : function () {
             var coinsAux = model.coins + 1;
-            var index = A2(getLIndex,
+            var index = A2($API.getLIndex,
             listPilar,
             $Maybe.Nothing);
             return _U.replace([["board"
@@ -5634,6 +5455,457 @@ Elm.Main.make = function (_elm) {
          }();
       }();
    });
+   var getStringStatus = function (m) {
+      return function () {
+         var _v18 = m.status;
+         switch (_v18.ctor)
+         {case "Tied": return "Tied";
+            case "Won":
+            return A2($Basics._op["++"],
+              A2(getStringTurn,
+              m,
+              updateTurn(m.turn)),
+              " Won!");}
+         return " ";
+      }();
+   };
+   var getViewWonTied = F2(function (address,
+   model) {
+      return function () {
+         var s = getStringStatus(model);
+         return A2($Html.div,
+         _L.fromArray([$Styles.center]),
+         _L.fromArray([getImageLogo
+                      ,A2($Html.div,
+                      _L.fromArray([]),
+                      _L.fromArray([A2($Html.h3,
+                      _L.fromArray([$Html$Attributes.align("center")
+                                   ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                         ,_0: "margin"
+                                                                         ,_1: "0"}]))]),
+                      _L.fromArray([$Html.text(s)]))]))
+                      ,A3(getViewBoard,
+                      address,
+                      model,
+                      false)
+                      ,A2($Html.div,
+                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                         ,_0: "margin"
+                                                                         ,_1: "0 auto"}
+                                                                        ,{ctor: "_Tuple2"
+                                                                         ,_0: "width"
+                                                                         ,_1: "100px"}]))]),
+                      _L.fromArray([A2($Html.img,
+                      _L.fromArray([$Html$Attributes.src("img/replay.png")
+                                   ,$Html$Attributes.width(100)
+                                   ,A2($Html$Events.onClick,
+                                   address,
+                                   Replay)
+                                   ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                                         ,_0: "margin-top"
+                                                                         ,_1: "20px"}]))]),
+                      _L.fromArray([]))]))]));
+      }();
+   });
+   var getModeSelect = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                         ,_0: "margin-left"
+                                                         ,_1: "100px"}]))]),
+      _L.fromArray([A2($Html.h3,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text("Select Mode: ")]))
+                   ,A2($Html.input,
+                   _L.fromArray([$Html$Attributes.type$("radio")
+                                ,$Html$Attributes.checked(_U.eq(model.ai,
+                                $Maybe.Nothing))
+                                ,A3($Html$Events.on,
+                                "change",
+                                $Html$Events.targetChecked,
+                                function (_v19) {
+                                   return function () {
+                                      return A2($Signal.message,
+                                      address,
+                                      AI($Maybe.Nothing));
+                                   }();
+                                })]),
+                   _L.fromArray([]))
+                   ,$Html.text(" 2 Players")
+                   ,A2($Html.br,
+                   _L.fromArray([]),
+                   _L.fromArray([]))
+                   ,A2($Html.input,
+                   _L.fromArray([$Html$Attributes.type$("radio")
+                                ,$Html$Attributes.checked(_U.eq(model.ai,
+                                $Maybe.Just(Black)))
+                                ,A3($Html$Events.on,
+                                "change",
+                                $Html$Events.targetChecked,
+                                function (_v21) {
+                                   return function () {
+                                      return A2($Signal.message,
+                                      address,
+                                      AI($Maybe.Just(Black)));
+                                   }();
+                                })]),
+                   _L.fromArray([]))
+                   ,$Html.text(" vs CPU - CPU moves first")
+                   ,A2($Html.br,
+                   _L.fromArray([]),
+                   _L.fromArray([]))
+                   ,A2($Html.input,
+                   _L.fromArray([$Html$Attributes.type$("radio")
+                                ,$Html$Attributes.checked(_U.eq(model.ai,
+                                $Maybe.Just(White)))
+                                ,A3($Html$Events.on,
+                                "change",
+                                $Html$Events.targetChecked,
+                                function (_v23) {
+                                   return function () {
+                                      return A2($Signal.message,
+                                      address,
+                                      AI($Maybe.Just(White)));
+                                   }();
+                                })]),
+                   _L.fromArray([]))
+                   ,$Html.text(" vs CPU - Human moves first")
+                   ,A2($Html.br,
+                   _L.fromArray([]),
+                   _L.fromArray([]))]));
+   });
+   var getLevelSelect = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                         ,_0: "margin-left"
+                                                         ,_1: "100px"}]))]),
+      _L.fromArray([A2($Html.div,
+                   _L.fromArray([$Styles.inline]),
+                   _L.fromArray([A2($Html.h3,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("Select Mode: ")]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.ai,
+                                             $Maybe.Nothing))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v25) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   AI($Maybe.Nothing));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" 2 Players")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.ai,
+                                             $Maybe.Just(Black)))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v27) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   AI($Maybe.Just(Black)));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" vs CPU - CPU moves first")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.ai,
+                                             $Maybe.Just(White)))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v29) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   AI($Maybe.Just(White)));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" vs CPU - Human moves first")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))]))
+                   ,A2($Html.div,
+                   _L.fromArray([$Styles.inline]),
+                   _L.fromArray([A2($Html.h3,
+                                _L.fromArray([]),
+                                _L.fromArray([$Html.text("Select Level:")]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.prof,
+                                             2))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v31) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   Prof(2));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" Easy")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.prof,
+                                             3))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v33) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   Prof(3));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" Medium")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))
+                                ,A2($Html.input,
+                                _L.fromArray([$Html$Attributes.type$("radio")
+                                             ,$Html$Attributes.checked(_U.eq(model.prof,
+                                             4))
+                                             ,A3($Html$Events.on,
+                                             "change",
+                                             $Html$Events.targetChecked,
+                                             function (_v35) {
+                                                return function () {
+                                                   return A2($Signal.message,
+                                                   address,
+                                                   Prof(4));
+                                                }();
+                                             })]),
+                                _L.fromArray([]))
+                                ,$Html.text(" Hard")
+                                ,A2($Html.br,
+                                _L.fromArray([]),
+                                _L.fromArray([]))]))]));
+   });
+   var getViewStart = F2(function (address,
+   model) {
+      return _U.eq(model.ai,
+      $Maybe.Nothing) ? A2($Html.div,
+      _L.fromArray([$Styles.center]),
+      _L.fromArray([getImageLogo
+                   ,A2(getModeSelect,address,model)
+                   ,getPlayButton(address)])) : A2($Html.div,
+      _L.fromArray([$Styles.center]),
+      _L.fromArray([getImageLogo
+                   ,A2(getLevelSelect,
+                   address,
+                   model)
+                   ,getPlayButton(address)]));
+   });
+   var view = F2(function (address,
+   model) {
+      return function () {
+         var _v37 = model.status;
+         switch (_v37.ctor)
+         {case "InGame":
+            return _U.eq(model.ai,
+              $API.just(model.turn)) ? A2(getViewInGameCPU,
+              address,
+              model) : A2(getViewInGameHuman,
+              address,
+              model);
+            case "Starting":
+            return A2(getViewStart,
+              address,
+              model);}
+         return A2(getViewWonTied,
+         address,
+         model);
+      }();
+   });
+   var countLines = F4(function (model,
+   pilar,
+   index,
+   c) {
+      return A3($List.foldr,
+      F2(function (b,c) {
+         return b ? c + 10 : c;
+      }),
+      0,
+      A2($List.map,
+      followPath,
+      _L.fromArray([{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 1
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 2
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 3
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 4
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 5
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 6
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 7
+                    ,_5: c}
+                   ,{ctor: "_Tuple6"
+                    ,_0: model.board
+                    ,_1: model.turn
+                    ,_2: pilar
+                    ,_3: index
+                    ,_4: 8
+                    ,_5: c}])));
+   });
+   var getPilarValue = function (p) {
+      return function () {
+         switch (p)
+         {case 1: return 10;
+            case 2: return 20;
+            case 3: return 30;
+            case 4: return 40;
+            case 5: return 30;
+            case 6: return 20;
+            case 7: return 10;}
+         _U.badCase($moduleName,
+         "between lines 136 and 143");
+      }();
+   };
+   var getPilarLines = F3(function (pilar,
+   model,
+   line) {
+      return A3($List.foldr,
+      F2(function (index,count) {
+         return _U.eq(A3($API.getM,
+         model.board,
+         pilar,
+         index),
+         $API.just(updateTurn(model.turn))) ? count + A4(countLines,
+         model,
+         pilar,
+         index,
+         line) : count;
+      }),
+      0,
+      _L.fromArray([1,2,3,4,5,6]));
+   });
+   var getH3 = function (s) {
+      return A3($List.foldr,
+      F2(function (pilar,count) {
+         return count + A3(getPilarLines,
+         pilar,
+         s.model,
+         3);
+      }),
+      0,
+      _L.fromArray([1,2,3,4,5,6,7]));
+   };
+   var getH2 = function (s) {
+      return A3($List.foldr,
+      F2(function (pilar,count) {
+         return count + getPilarValue(pilar) * (A2($API.countElem,
+         A2($API.getL,
+         s.model.board,
+         pilar),
+         $API.just(updateTurn(s.model.turn))) - A2($API.countElem,
+         A2($API.getL,
+         s.model.board,
+         pilar),
+         $API.just(s.model.turn)));
+      }),
+      0,
+      _L.fromArray([1,2,3,4,5,6,7]));
+   };
+   var getH1 = function (s) {
+      return _U.eq(s.model.status,
+      Won) ? $API.inf : A2($Debug.watch,
+      "Hs",
+      getH2(s) + getH3(s));
+   };
+   var getHeuristic = function (s) {
+      return function () {
+         var h = getH1(s);
+         return !_U.eq(s.model.turn,
+         $API.unJust(s.model.ai)) ? h : -1 * h;
+      }();
+   };
+   var getHead = function (_v39) {
+      return function () {
+         switch (_v39.ctor)
+         {case "Node": return _v39._0;}
+         _U.badCase($moduleName,
+         "on line 98, column 22 to 23");
+      }();
+   };
+   var initInfo = F3(function (heuristicParam,
+   moveParam,
+   bestMoveParam) {
+      return {_: {}
+             ,bestMove: bestMoveParam
+             ,heuristic: heuristicParam
+             ,move: moveParam};
+   });
+   var generateState = F2(function (moveParam,
+   modelParam) {
+      return {_: {}
+             ,info: A3(initInfo,
+             0,
+             moveParam,
+             0)
+             ,model: modelParam};
+   });
    var getStates = function (s) {
       return A2($List.map,
       function (pilar) {
@@ -5643,12 +5915,50 @@ Elm.Main.make = function (_elm) {
       },
       A2($List.filter,
       function (pilar) {
-         return $Basics.not(isFull(A2(getL,
+         return $Basics.not(isFull(A2($API.getL,
          s.model.board,
          pilar)));
       },
       _L.fromArray([1,2,3,4,5,6,7])));
    };
+   var getMax = F2(function (s,l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return function () {
+                 var max = A2(getMax,s,l._1);
+                 return _U.cmp(getHead(l._0).info.heuristic,
+                 max.heuristic) > -1 ? A3(initInfo,
+                 getHead(l._0).info.heuristic,
+                 s.info.move,
+                 getHead(l._0).info.move) : max;
+              }();
+            case "[]": return A3(initInfo,
+              -1 * ($API.inf + 1),
+              0,
+              s.info.move);}
+         _U.badCase($moduleName,
+         "between lines 86 and 88");
+      }();
+   });
+   var getMin = F2(function (s,l) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return function () {
+                 var min = A2(getMin,s,l._1);
+                 return _U.cmp(getHead(l._0).info.heuristic,
+                 min.heuristic) < 1 ? A3(initInfo,
+                 getHead(l._0).info.heuristic,
+                 s.info.move,
+                 getHead(l._0).info.move) : min;
+              }();
+            case "[]": return A3(initInfo,
+              $API.inf + 1,
+              0,
+              s.info.move);}
+         _U.badCase($moduleName,
+         "between lines 92 and 94");
+      }();
+   });
    var Node = F2(function (a,b) {
       return {ctor: "Node"
              ,_0: a
@@ -5667,136 +5977,39 @@ Elm.Main.make = function (_elm) {
       generateTree(p - 1),
       getStates(s)));
    });
-   var unJust = function (_v63) {
-      return function () {
-         switch (_v63.ctor)
-         {case "Just": return _v63._0;}
-         _U.badCase($moduleName,
-         "on line 22, column 20 to 21");
-      }();
-   };
-   var just = function (a) {
-      return $Maybe.Just(a);
-   };
-   var getH2 = function (s) {
-      return function () {
-         var index = A2(getLIndex,
-         A2(getL,
-         s.model.board,
-         s.info.move),
-         just(s.model.turn));
-         var aux = A3($List.foldr,
-         F2(function (b,c) {
-            return b ? c + 10 : c;
-         }),
-         0,
-         A2($List.map,
-         followPath,
-         _L.fromArray([{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 1
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 2
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 3
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 4
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 5
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 6
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 7
-                       ,_5: 3}
-                      ,{ctor: "_Tuple6"
-                       ,_0: s.model.board
-                       ,_1: s.model.turn
-                       ,_2: s.info.move
-                       ,_3: index
-                       ,_4: 8
-                       ,_5: 3}])));
-         return _U.eq(s.info.move,
-         4) ? aux + 100 : aux;
-      }();
-   };
-   var getH1 = function (s) {
-      return _U.eq(s.model.status,
-      Won) ? !_U.eq(s.model.turn,
-      unJust(s.model.ai)) ? inf : -1 * inf : function () {
-         var h = getH2(s);
-         return !_U.eq(s.model.turn,
-         unJust(s.model.ai)) ? h : -1 * h;
-      }();
-   };
-   var getHeuristic = function (s) {
-      return getH1(s);
-   };
    var minimaxR = F2(function (p,
-   _v66) {
+   _v49) {
       return function () {
-         switch (_v66.ctor)
+         switch (_v49.ctor)
          {case "Node":
             return function () {
                  var i = !_U.eq(p,
-                 _v66._0.model.prof) && (_U.eq(p,
-                 0) || !_U.eq(_v66._0.model.status,
+                 _v49._0.model.prof) && (_U.eq(p,
+                 0) || !_U.eq(_v49._0.model.status,
                  InGame)) ? A3(initInfo,
-                 getHeuristic(_v66._0),
-                 _v66._0.info.move,
-                 _v66._0.info.move) : _U.eq(_v66._0.model.turn,
-                 unJust(_v66._0.model.ai)) ? A2($Debug.watch,
+                 getHeuristic(_v49._0),
+                 _v49._0.info.move,
+                 _v49._0.info.move) : _U.eq(_v49._0.model.turn,
+                 $API.unJust(_v49._0.model.ai)) ? A2($Debug.watch,
                  "MAX",
                  A2(getMax,
-                 _v66._0,
+                 _v49._0,
                  A2($List.map,
                  minimaxR(p - 1),
-                 _v66._1))) : A2($Debug.watch,
+                 _v49._1))) : A2($Debug.watch,
                  "MIN",
                  A2(getMin,
-                 _v66._0,
+                 _v49._0,
                  A2($List.map,
                  minimaxR(p - 1),
-                 _v66._1)));
+                 _v49._1)));
                  return A2(Node,
                  _U.replace([["info",i]],
-                 _v66._0),
-                 _v66._1);
+                 _v49._0),
+                 _v49._1);
               }();}
          _U.badCase($moduleName,
-         "between lines 123 and 136");
+         "between lines 68 and 81");
       }();
    });
    var minimax = F2(function (s,
@@ -5835,176 +6048,45 @@ Elm.Main.make = function (_elm) {
                                ,InGame]],
               model);}
          _U.badCase($moduleName,
-         "between lines 279 and 285");
-      }();
-   });
-   var getStringTurn = F2(function (m,
-   t) {
-      return _U.eq(m.ai,
-      $Maybe.Nothing) ? function () {
-         switch (t.ctor)
-         {case "Black": return "Red";
-            case "White": return "Blue";}
-         _U.badCase($moduleName,
-         "between lines 264 and 267");
-      }() : _U.eq(m.ai,
-      just(t)) ? "CPU" : "Human";
-   });
-   var getViewInGameHuman = F2(function (address,
-   model) {
-      return A2($Html.div,
-      _L.fromArray([center]),
-      _L.fromArray([getImageLogo
-                   ,A2($Html.h3,
-                   _L.fromArray([]),
-                   _L.fromArray([$Html.text(A2($Basics._op["++"],
-                   "Turn: ",
-                   A2(getStringTurn,
-                   model,
-                   model.turn)))]))
-                   ,A3(getViewBoard,
-                   address,
-                   model,
-                   true)]));
-   });
-   var getViewInGameCPU = F2(function (address,
-   model) {
-      return A2($Html.div,
-      _L.fromArray([center]),
-      _L.fromArray([getImageLogo
-                   ,A2($Html.h3,
-                   _L.fromArray([]),
-                   _L.fromArray([$Html.text(A2($Basics._op["++"],
-                   "Turn: ",
-                   A2(getStringTurn,
-                   model,
-                   model.turn)))]))
-                   ,A3(getViewBoard,
-                   address,
-                   model,
-                   false)
-                   ,A2($Html.div,
-                   _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                      ,_0: "margin"
-                                                                      ,_1: "0 auto"}
-                                                                     ,{ctor: "_Tuple2"
-                                                                      ,_0: "width"
-                                                                      ,_1: "250px"}]))]),
-                   _L.fromArray([A2($Html.img,
-                   _L.fromArray([$Html$Attributes.src("img/next.png")
-                                ,$Html$Attributes.width(250)
-                                ,A2($Html$Events.onClick,
-                                address,
-                                MoveCPU)
-                                ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                      ,_0: "margin-top"
-                                                                      ,_1: "20px"}]))]),
-                   _L.fromArray([]))]))]));
-   });
-   var getStringStatus = function (m) {
-      return function () {
-         var _v75 = m.status;
-         switch (_v75.ctor)
-         {case "Tied": return "Tied";
-            case "Won":
-            return A2($Basics._op["++"],
-              A2(getStringTurn,
-              m,
-              updateTurn(m.turn)),
-              " Won!");}
-         return " ";
-      }();
-   };
-   var getViewWonTied = F2(function (address,
-   model) {
-      return function () {
-         var s = getStringStatus(model);
-         return A2($Html.div,
-         _L.fromArray([center]),
-         _L.fromArray([getImageLogo
-                      ,A2($Html.div,
-                      _L.fromArray([]),
-                      _L.fromArray([A2($Html.h3,
-                      _L.fromArray([]),
-                      _L.fromArray([$Html.text(s)]))]))
-                      ,A3(getViewBoard,
-                      address,
-                      model,
-                      false)
-                      ,A2($Html.div,
-                      _L.fromArray([$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                         ,_0: "margin"
-                                                                         ,_1: "0 auto"}
-                                                                        ,{ctor: "_Tuple2"
-                                                                         ,_0: "width"
-                                                                         ,_1: "100px"}]))]),
-                      _L.fromArray([A2($Html.img,
-                      _L.fromArray([$Html$Attributes.src("img/replay.png")
-                                   ,$Html$Attributes.width(100)
-                                   ,A2($Html$Events.onClick,
-                                   address,
-                                   Replay)
-                                   ,$Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
-                                                                         ,_0: "margin-top"
-                                                                         ,_1: "20px"}]))]),
-                      _L.fromArray([]))]))]));
-      }();
-   });
-   var view = F2(function (address,
-   model) {
-      return function () {
-         var _v76 = model.status;
-         switch (_v76.ctor)
-         {case "InGame":
-            return _U.eq(model.ai,
-              just(model.turn)) ? A2(getViewInGameCPU,
-              address,
-              model) : A2(getViewInGameHuman,
-              address,
-              model);
-            case "Starting":
-            return A2(getViewStart,
-              address,
-              model);}
-         return A2(getViewWonTied,
-         address,
-         model);
+         "between lines 229 and 235");
       }();
    });
    var main = $StartApp.start({_: {}
                               ,model: init
                               ,update: update
                               ,view: view});
+   var State = F2(function (a,b) {
+      return {_: {}
+             ,info: b
+             ,model: a};
+   });
+   var Info = F3(function (a,b,c) {
+      return {_: {}
+             ,bestMove: b
+             ,heuristic: c
+             ,move: a};
+   });
    _elm.Main.values = {_op: _op
-                      ,just: just
-                      ,unJust: unJust
-                      ,Node: Node
-                      ,bottom: bottom
-                      ,getL: getL
-                      ,getLIndex: getLIndex
-                      ,getLIndexR: getLIndexR
-                      ,containsL: containsL
-                      ,putLFirst: putLFirst
-                      ,putL: putL
-                      ,getM: getM
-                      ,putM: putM
-                      ,emptyMatrix: emptyMatrix
-                      ,inf: inf
                       ,Info: Info
-                      ,initInfo: initInfo
                       ,State: State
+                      ,Node: Node
+                      ,initInfo: initInfo
                       ,ai: ai
                       ,generateState: generateState
                       ,generateTree: generateTree
                       ,getStates: getStates
                       ,minimax: minimax
                       ,minimaxR: minimaxR
-                      ,getHeuristic: getHeuristic
                       ,getMax: getMax
                       ,getMin: getMin
                       ,getHead: getHead
+                      ,getHeuristic: getHeuristic
                       ,getH1: getH1
                       ,getH2: getH2
+                      ,getH3: getH3
+                      ,getPilarLines: getPilarLines
+                      ,getPilarValue: getPilarValue
+                      ,countLines: countLines
                       ,Black: Black
                       ,White: White
                       ,Starting: Starting
@@ -6033,21 +6115,15 @@ Elm.Main.make = function (_elm) {
                       ,followPathR: followPathR
                       ,opposite: opposite
                       ,tiedGame: tiedGame
-                      ,inline: inline
-                      ,width: width
-                      ,center: center
-                      ,bigButton: bigButton
-                      ,mediumButton: mediumButton
-                      ,smallButton: smallButton
-                      ,tableSize: tableSize
-                      ,tableBorder: tableBorder
                       ,view: view
-                      ,marginUp: marginUp
                       ,getImageLogo: getImageLogo
                       ,getModeSelect: getModeSelect
                       ,getLevelSelect: getLevelSelect
                       ,getPlayButton: getPlayButton
                       ,getViewStart: getViewStart
+                      ,cAttributes: cAttributes
+                      ,svgAttributes: svgAttributes
+                      ,rAttributes: rAttributes
                       ,getFigure: getFigure
                       ,getSvg: getSvg
                       ,getViewBoard: getViewBoard
@@ -11763,117 +11839,6 @@ Elm.Native.Text.make = function(localRuntime) {
 	};
 };
 
-Elm.Native.Time = {};
-Elm.Native.Time.make = function(localRuntime)
-{
-
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Time = localRuntime.Native.Time || {};
-	if (localRuntime.Native.Time.values)
-	{
-		return localRuntime.Native.Time.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Maybe = Elm.Maybe.make(localRuntime);
-
-
-	// FRAMES PER SECOND
-
-	function fpsWhen(desiredFPS, isOn)
-	{
-		var msPerFrame = 1000 / desiredFPS;
-		var ticker = NS.input('fps-' + desiredFPS, null);
-
-		function notifyTicker()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-
-		function firstArg(x, y)
-		{
-			return x;
-		}
-
-		// input fires either when isOn changes, or when ticker fires.
-		// Its value is a tuple with the current timestamp, and the state of isOn
-		var input = NS.timestamp(A3(NS.map2, F2(firstArg), NS.dropRepeats(isOn), ticker));
-
-		var initialState = {
-			isOn: false,
-			time: localRuntime.timer.programStart,
-			delta: 0
-		};
-
-		var timeoutId;
-
-		function update(input,state)
-		{
-			var currentTime = input._0;
-			var isOn = input._1;
-			var wasOn = state.isOn;
-			var previousTime = state.time;
-
-			if (isOn)
-			{
-				timeoutId = localRuntime.setTimeout(notifyTicker, msPerFrame);
-			}
-			else if (wasOn)
-			{
-				clearTimeout(timeoutId);
-			}
-
-			return {
-				isOn: isOn,
-				time: currentTime,
-				delta: (isOn && !wasOn) ? 0 : currentTime - previousTime
-			};
-		}
-
-		return A2(
-			NS.map,
-			function(state) { return state.delta; },
-			A3(NS.foldp, F2(update), update(input.value,initialState), input)
-		);
-	}
-
-
-	// EVERY
-
-	function every(t)
-	{
-		var ticker = NS.input('every-' + t, null);
-		function tellTime()
-		{
-			localRuntime.notify(ticker.id, null);
-		}
-		var clock = A2( NS.map, fst, NS.timestamp(ticker) );
-		setInterval(tellTime, t);
-		return clock;
-	}
-
-
-	function fst(pair)
-	{
-		return pair._0;
-	}
-
-
-	function read(s)
-	{
-		var t = Date.parse(s);
-		return isNaN(t) ? Maybe.Nothing : Maybe.Just(t);
-	}
-
-	return localRuntime.Native.Time.values = {
-		fpsWhen: F2(fpsWhen),
-		every: every,
-		toDate: function(t) { return new window.Date(t); },
-		read: read
-	};
-
-};
-
 Elm.Native.Transform2D = {};
 Elm.Native.Transform2D.make = function(localRuntime) {
 
@@ -13870,75 +13835,6 @@ Elm.Native.VirtualDom.make = function(elm)
 
 },{}]},{},[23]);
 
-Elm.Native = Elm.Native || {};
-Elm.Native.Window = {};
-Elm.Native.Window.make = function(localRuntime) {
-
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Window = localRuntime.Native.Window || {};
-	if (localRuntime.Native.Window.values)
-	{
-		return localRuntime.Native.Window.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Tuple2 = Elm.Native.Utils.make(localRuntime).Tuple2;
-
-
-	function getWidth()
-	{
-		return localRuntime.node.clientWidth;
-	}
-
-
-	function getHeight()
-	{
-		if (localRuntime.isFullscreen())
-		{
-			return window.innerHeight;
-		}
-		return localRuntime.node.clientHeight;
-	}
-
-
-	var dimensions = NS.input('Window.dimensions', Tuple2(getWidth(), getHeight()));
-
-
-	function resizeIfNeeded()
-	{
-		// Do not trigger event if the dimensions have not changed.
-		// This should be most of the time.
-		var w = getWidth();
-		var h = getHeight();
-		if (dimensions.value._0 === w && dimensions.value._1 === h)
-		{
-			return;
-		}
-
-		setTimeout(function () {
-			// Check again to see if the dimensions have changed.
-			// It is conceivable that the dimensions have changed
-			// again while some other event was being processed.
-			var w = getWidth();
-			var h = getHeight();
-			if (dimensions.value._0 === w && dimensions.value._1 === h)
-			{
-				return;
-			}
-			localRuntime.notify(dimensions.id, Tuple2(w,h));
-		}, 0);
-	}
-
-
-	localRuntime.addListener([dimensions.id], window, 'resize', resizeIfNeeded);
-
-
-	return localRuntime.Native.Window.values = {
-		dimensions: dimensions,
-		resizeIfNeeded: resizeIfNeeded
-	};
-};
-
 Elm.Result = Elm.Result || {};
 Elm.Result.make = function (_elm) {
    "use strict";
@@ -14480,6 +14376,56 @@ Elm.String.make = function (_elm) {
                         ,any: any
                         ,all: all};
    return _elm.String.values;
+};
+Elm.Styles = Elm.Styles || {};
+Elm.Styles.make = function (_elm) {
+   "use strict";
+   _elm.Styles = _elm.Styles || {};
+   if (_elm.Styles.values)
+   return _elm.Styles.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Styles",
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var marginUp = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                       ,_0: "margin"
+                                                       ,_1: "10px"}]));
+   var tableBorder = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                          ,_0: "border"
+                                                          ,_1: "1px solid gray"}
+                                                         ,{ctor: "_Tuple2"
+                                                          ,_0: "background-color"
+                                                          ,_1: "gray"}]));
+   var width = 750;
+   var center = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                     ,_0: "margin"
+                                                     ,_1: "0 auto"}
+                                                    ,{ctor: "_Tuple2"
+                                                     ,_0: "width"
+                                                     ,_1: A2($Basics._op["++"],
+                                                     $Basics.toString(width),
+                                                     "px")}]));
+   var inline = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                     ,_0: "display"
+                                                     ,_1: "inline-block"}
+                                                    ,{ctor: "_Tuple2"
+                                                     ,_0: "width"
+                                                     ,_1: "300px"}]));
+   _elm.Styles.values = {_op: _op
+                        ,inline: inline
+                        ,width: width
+                        ,center: center
+                        ,tableBorder: tableBorder
+                        ,marginUp: marginUp};
+   return _elm.Styles.values;
 };
 Elm.Svg = Elm.Svg || {};
 Elm.Svg.make = function (_elm) {
@@ -15519,85 +15465,6 @@ Elm.Text.make = function (_elm) {
                       ,Through: Through};
    return _elm.Text.values;
 };
-Elm.Time = Elm.Time || {};
-Elm.Time.make = function (_elm) {
-   "use strict";
-   _elm.Time = _elm.Time || {};
-   if (_elm.Time.values)
-   return _elm.Time.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Time",
-   $Basics = Elm.Basics.make(_elm),
-   $Native$Signal = Elm.Native.Signal.make(_elm),
-   $Native$Time = Elm.Native.Time.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var delay = $Native$Signal.delay;
-   var since = F2(function (time,
-   signal) {
-      return function () {
-         var stop = A2($Signal.map,
-         $Basics.always(-1),
-         A2(delay,time,signal));
-         var start = A2($Signal.map,
-         $Basics.always(1),
-         signal);
-         var delaydiff = A3($Signal.foldp,
-         F2(function (x,y) {
-            return x + y;
-         }),
-         0,
-         A2($Signal.merge,start,stop));
-         return A2($Signal.map,
-         F2(function (x,y) {
-            return !_U.eq(x,y);
-         })(0),
-         delaydiff);
-      }();
-   });
-   var timestamp = $Native$Signal.timestamp;
-   var every = $Native$Time.every;
-   var fpsWhen = $Native$Time.fpsWhen;
-   var fps = function (targetFrames) {
-      return A2(fpsWhen,
-      targetFrames,
-      $Signal.constant(true));
-   };
-   var inMilliseconds = function (t) {
-      return t;
-   };
-   var millisecond = 1;
-   var second = 1000 * millisecond;
-   var minute = 60 * second;
-   var hour = 60 * minute;
-   var inHours = function (t) {
-      return t / hour;
-   };
-   var inMinutes = function (t) {
-      return t / minute;
-   };
-   var inSeconds = function (t) {
-      return t / second;
-   };
-   _elm.Time.values = {_op: _op
-                      ,millisecond: millisecond
-                      ,second: second
-                      ,minute: minute
-                      ,hour: hour
-                      ,inMilliseconds: inMilliseconds
-                      ,inSeconds: inSeconds
-                      ,inMinutes: inMinutes
-                      ,inHours: inHours
-                      ,fps: fps
-                      ,fpsWhen: fpsWhen
-                      ,every: every
-                      ,timestamp: timestamp
-                      ,delay: delay
-                      ,since: since};
-   return _elm.Time.values;
-};
 Elm.Transform2D = Elm.Transform2D || {};
 Elm.Transform2D.make = function (_elm) {
    "use strict";
@@ -15727,31 +15594,4 @@ Elm.VirtualDom.make = function (_elm) {
                             ,lazy3: lazy3
                             ,Options: Options};
    return _elm.VirtualDom.values;
-};
-Elm.Window = Elm.Window || {};
-Elm.Window.make = function (_elm) {
-   "use strict";
-   _elm.Window = _elm.Window || {};
-   if (_elm.Window.values)
-   return _elm.Window.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Window",
-   $Basics = Elm.Basics.make(_elm),
-   $Native$Window = Elm.Native.Window.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var dimensions = $Native$Window.dimensions;
-   var width = A2($Signal.map,
-   $Basics.fst,
-   dimensions);
-   var height = A2($Signal.map,
-   $Basics.snd,
-   dimensions);
-   _elm.Window.values = {_op: _op
-                        ,dimensions: dimensions
-                        ,width: width
-                        ,height: height};
-   return _elm.Window.values;
 };

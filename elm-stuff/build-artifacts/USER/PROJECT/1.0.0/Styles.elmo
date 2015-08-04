@@ -1,0 +1,50 @@
+Elm.Styles = Elm.Styles || {};
+Elm.Styles.make = function (_elm) {
+   "use strict";
+   _elm.Styles = _elm.Styles || {};
+   if (_elm.Styles.values)
+   return _elm.Styles.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Styles",
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var marginUp = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                       ,_0: "margin"
+                                                       ,_1: "10px"}]));
+   var tableBorder = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                          ,_0: "border"
+                                                          ,_1: "1px solid gray"}
+                                                         ,{ctor: "_Tuple2"
+                                                          ,_0: "background-color"
+                                                          ,_1: "gray"}]));
+   var width = 750;
+   var center = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                     ,_0: "margin"
+                                                     ,_1: "0 auto"}
+                                                    ,{ctor: "_Tuple2"
+                                                     ,_0: "width"
+                                                     ,_1: A2($Basics._op["++"],
+                                                     $Basics.toString(width),
+                                                     "px")}]));
+   var inline = $Html$Attributes.style(_L.fromArray([{ctor: "_Tuple2"
+                                                     ,_0: "display"
+                                                     ,_1: "inline-block"}
+                                                    ,{ctor: "_Tuple2"
+                                                     ,_0: "width"
+                                                     ,_1: "300px"}]));
+   _elm.Styles.values = {_op: _op
+                        ,inline: inline
+                        ,width: width
+                        ,center: center
+                        ,tableBorder: tableBorder
+                        ,marginUp: marginUp};
+   return _elm.Styles.values;
+};

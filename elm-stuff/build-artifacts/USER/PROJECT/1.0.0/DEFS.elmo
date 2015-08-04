@@ -1,0 +1,85 @@
+Elm.Defs = Elm.Defs || {};
+Elm.Defs.make = function (_elm) {
+   "use strict";
+   _elm.Defs = _elm.Defs || {};
+   if (_elm.Defs.values)
+   return _elm.Defs.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Defs",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var inf = 1000;
+   var MoveCPU = {ctor: "MoveCPU"};
+   var AI = function (a) {
+      return {ctor: "AI",_0: a};
+   };
+   var Prof = function (a) {
+      return {ctor: "Prof",_0: a};
+   };
+   var Replay = {ctor: "Replay"};
+   var Start = {ctor: "Start"};
+   var Move = function (a) {
+      return {ctor: "Move",_0: a};
+   };
+   var Model = F6(function (a,
+   b,
+   c,
+   d,
+   e,
+   f) {
+      return {_: {}
+             ,ai: e
+             ,board: a
+             ,coins: d
+             ,prof: f
+             ,status: c
+             ,turn: b};
+   });
+   var Tied = {ctor: "Tied"};
+   var Won = {ctor: "Won"};
+   var InGame = {ctor: "InGame"};
+   var Starting = {ctor: "Starting"};
+   var White = {ctor: "White"};
+   var Black = {ctor: "Black"};
+   var State = F2(function (a,b) {
+      return {_: {}
+             ,info: b
+             ,model: a};
+   });
+   var Node = F2(function (a,b) {
+      return {ctor: "Node"
+             ,_0: a
+             ,_1: b};
+   });
+   var Info = F3(function (a,b,c) {
+      return {_: {}
+             ,bestMove: b
+             ,heuristic: c
+             ,move: a};
+   });
+   _elm.Defs.values = {_op: _op
+                      ,Info: Info
+                      ,Node: Node
+                      ,State: State
+                      ,Black: Black
+                      ,White: White
+                      ,Starting: Starting
+                      ,InGame: InGame
+                      ,Won: Won
+                      ,Tied: Tied
+                      ,Model: Model
+                      ,Move: Move
+                      ,Start: Start
+                      ,Replay: Replay
+                      ,Prof: Prof
+                      ,AI: AI
+                      ,MoveCPU: MoveCPU
+                      ,inf: inf};
+   return _elm.Defs.values;
+};

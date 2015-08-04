@@ -1,0 +1,162 @@
+Elm.API = Elm.API || {};
+Elm.API.make = function (_elm) {
+   "use strict";
+   _elm.API = _elm.API || {};
+   if (_elm.API.values)
+   return _elm.API.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "API",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var inf = 1000;
+   var emptyMatrix = F3(function (row,
+   col,
+   elem) {
+      return A2($List.repeat,
+      row,
+      A2($List.repeat,col,elem));
+   });
+   var countElem = F2(function (l,
+   elem) {
+      return A3($List.foldr,
+      F2(function (x,c) {
+         return _U.eq(x,
+         elem) ? c + 1 : c;
+      }),
+      0,
+      l);
+   });
+   var putL = F3(function (l,a,n) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(n,
+              1) ? A2($List._op["::"],
+              a,
+              l._1) : A2($List._op["::"],
+              l._0,
+              A3(putL,l._1,a,n - 1));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 47 and 49");
+      }();
+   });
+   var putLFirst = F3(function (l,
+   first,
+   elem) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              first) ? A2($List._op["::"],
+              elem,
+              l._1) : A2($List._op["::"],
+              l._0,
+              A3(putLFirst,l._1,first,elem));
+            case "[]":
+            return _L.fromArray([]);}
+         _U.badCase($moduleName,
+         "between lines 41 and 43");
+      }();
+   });
+   var containsL = F2(function (l,
+   elem) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              elem) ? true : A2(containsL,
+              l._1,
+              elem);
+            case "[]": return false;}
+         _U.badCase($moduleName,
+         "between lines 35 and 37");
+      }();
+   });
+   var bottom = bottom;
+   var getL = F2(function (l,n) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(n,
+              1) ? l._0 : A2(getL,l._1,n - 1);
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 19 and 21");
+      }();
+   });
+   var getM = F3(function (m,r,c) {
+      return A2(getL,
+      A2(getL,m,r),
+      c);
+   });
+   var getLIndexR = F3(function (l,
+   elem,
+   pos) {
+      return function () {
+         switch (l.ctor)
+         {case "::": return _U.eq(l._0,
+              elem) ? pos : A3(getLIndexR,
+              l._1,
+              elem,
+              pos + 1);
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 29 and 31");
+      }();
+   });
+   var getLIndex = F2(function (l,
+   elem) {
+      return A3(getLIndexR,
+      l,
+      elem,
+      1);
+   });
+   var putM = F4(function (m,
+   r,
+   c,
+   elem) {
+      return function () {
+         switch (m.ctor)
+         {case "::": return _U.eq(r,
+              1) ? A2($List._op["::"],
+              A3(putL,m._0,elem,c),
+              m._1) : A2($List._op["::"],
+              m._0,
+              A4(putM,m._1,r - 1,c,elem));
+            case "[]": return bottom;}
+         _U.badCase($moduleName,
+         "between lines 60 and 62");
+      }();
+   });
+   var unJust = function (_v18) {
+      return function () {
+         switch (_v18.ctor)
+         {case "Just": return _v18._0;}
+         _U.badCase($moduleName,
+         "on line 11, column 20 to 21");
+      }();
+   };
+   var just = function (a) {
+      return $Maybe.Just(a);
+   };
+   _elm.API.values = {_op: _op
+                     ,just: just
+                     ,unJust: unJust
+                     ,bottom: bottom
+                     ,getL: getL
+                     ,getLIndex: getLIndex
+                     ,getLIndexR: getLIndexR
+                     ,containsL: containsL
+                     ,putLFirst: putLFirst
+                     ,putL: putL
+                     ,countElem: countElem
+                     ,getM: getM
+                     ,putM: putM
+                     ,emptyMatrix: emptyMatrix
+                     ,inf: inf};
+   return _elm.API.values;
+};
